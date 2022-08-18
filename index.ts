@@ -16,6 +16,7 @@ export type HelpMessage = Pick<
   | 'reactions'
   | 'mentions'
 >
+export type HelpMessageMap = typeof helpMessagesWithoutReaction
 
 client.once('ready', () => {
   console.log(`ready as ${client.user?.tag} at ${client.readyAt}`)
@@ -33,7 +34,8 @@ client.once('ready', () => {
 
 // stored as a global for now
 // it is either mutated in this file or via explicit params
-const helpMessagesWithoutReaction: HelpMessage[] = []
+// const helpMessagesWithoutReaction: HelpMessage[] = [] // old
+const helpMessagesWithoutReaction = new Map<HelpMessage['id'], HelpMessage>()
 
 client.on('messageReactionAdd', (reaction) => {
   if (reaction.message.channel.id !== HELP_DESK_CHANNEL_ID) return
@@ -53,7 +55,7 @@ client.on('messageCreate', async (message) => {
     (mentionedChannel || mentionedRole) &&
     message.reactions.cache.size === 0
   ) {
-    helpMessagesWithoutReaction.push(message)
+    helpMessagesWithoutReaction.set(message.id, message)
   }
 
   checkForUnresolvedMessages(helpMessagesWithoutReaction)
@@ -62,8 +64,9 @@ client.on('messageCreate', async (message) => {
 // basic polling
 const checkEvery = (ms: number) => {
   setInterval(() => {
+    console.log('num unresolved messages: ', helpMessagesWithoutReaction.size)
     checkForUnresolvedMessages(helpMessagesWithoutReaction)
-  })
+  }, ms)
 }
 
 checkEvery(5000)

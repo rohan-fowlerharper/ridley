@@ -3,14 +3,7 @@ import { RESERVE_ROLE_ID } from './constants'
 import { getReserveAlertsChannel } from './get-channels'
 import { TIMEOUT } from './constants'
 import { client } from './client'
-import { HelpMessage } from './index'
-
-export function removeMessage(messages: HelpMessage[], id: HelpMessage['id']) {
-  const message = messages.find((m) => m.id === id)
-  if (message) {
-    messages.splice(messages.indexOf(message), 1)
-  }
-}
+import { HelpMessage, HelpMessageMap } from './index'
 
 export const hasBeenWaitingWithoutReaction = (message: HelpMessage) => {
   return (
@@ -19,14 +12,25 @@ export const hasBeenWaitingWithoutReaction = (message: HelpMessage) => {
   )
 }
 
-export const isNewMessageWithoutReaction = (
-  messagesWithoutReaction: HelpMessage[]
-) => {
-  return messagesWithoutReaction.length > 3
+export const removeMessage = (
+  messages: HelpMessageMap,
+  id: HelpMessage['id']
+): void => {
+  const message = messages.get(id)
+
+  if (message) {
+    messages.delete(id)
+  }
 }
 
-export function checkForUnresolvedMessages(messages: HelpMessage[]) {
-  for (const message of messages) {
+export const isNewMessageWithoutReaction = (
+  messagesWithoutReaction: HelpMessageMap
+) => {
+  return messagesWithoutReaction.size > 3
+}
+
+export function checkForUnresolvedMessages(messages: HelpMessageMap) {
+  for (const [id, message] of messages) {
     if (
       hasBeenWaitingWithoutReaction(message) ||
       isNewMessageWithoutReaction(messages)
@@ -35,7 +39,7 @@ export function checkForUnresolvedMessages(messages: HelpMessage[]) {
       sendMessageToReserves(message)
 
       // remove message
-      messages.splice(messages.indexOf(message), 1)
+      removeMessage(messages, message.id)
     }
   }
 }
