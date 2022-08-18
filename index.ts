@@ -36,6 +36,8 @@ client.once('ready', () => {
 const helpMessagesWithoutReaction: HelpMessage[] = []
 
 client.on('messageReactionAdd', (reaction) => {
+  if (reaction.message.channel.id !== HELP_DESK_CHANNEL_ID) return
+
   removeMessage(helpMessagesWithoutReaction, reaction.message.id)
 
   checkForUnresolvedMessages(helpMessagesWithoutReaction)
