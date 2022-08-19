@@ -1,11 +1,17 @@
 import 'dotenv/config'
+import { channelMention } from 'discord.js'
 
 import { getReserveAlertsChannel } from './get-channels'
-import { HELP_DESK_CHANNEL_ID, POLLLING_INTERVAL } from './constants'
+import {
+  HELP_DESK_CHANNEL_ID,
+  POLLLING_INTERVAL,
+  RESERVE_ALERTS_CHANNEL_ID,
+  RESERVE_ROLE_ID,
+} from './constants'
 import { checkForUnresolvedMessages } from './helpers'
 import { client } from './client'
 
-import type { Message } from 'discord.js'
+import type { GuildMember, Message } from 'discord.js'
 
 export type HelpMessage = Pick<
   Message,
@@ -59,6 +65,54 @@ client.on('messageCreate', async (message) => {
   }
 
   checkForUnresolvedMessages(unresolvedMessages)
+})
+
+const facilitatorRoles = [
+  'dev academy staff',
+  'facilitators-all-campuses',
+  'online-facilitators',
+  'wellington-facilitators',
+  'auckland-facilitators',
+]
+
+client.on('interactionCreate', async (interaction) => {
+  if (!interaction.isChatInputCommand()) return
+  if (interaction.channelId !== RESERVE_ALERTS_CHANNEL_ID) {
+    await interaction.reply(
+      `These are not the channels you're looking for 🤖. Try ${channelMention(
+        RESERVE_ALERTS_CHANNEL_ID
+      )}`
+    )
+    return
+  }
+
+  const member = interaction.member as GuildMember
+
+  if (
+    !member?.roles.cache.some((role) => facilitatorRoles.includes(role.name))
+  ) {
+    await interaction.reply('Wait... you need to be a facilitator to do that')
+    return
+  }
+
+  const { commandName } = interaction
+
+  if (commandName === 'reserves') {
+    try {
+      if (member?.roles.cache.some((role) => role.id === RESERVE_ROLE_ID)) {
+        await member.roles.remove(RESERVE_ROLE_ID)
+        await interaction.reply('You have been dismissed from the reserve. 💌')
+        return
+      } else {
+        await member.roles.add(RESERVE_ROLE_ID)
+        await interaction.reply('Welcome to the reserve! 🥳')
+        return
+      }
+    } catch (err) {
+      console.log(err)
+      await interaction.reply('Argh, Bananas and Ferarris! Something happened.')
+    }
+  }
 })
 
 // basic polling

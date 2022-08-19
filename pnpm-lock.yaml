@@ -1,6 +1,7 @@
 lockfileVersion: 5.4
 
 specifiers:
+  '@discordjs/rest': ^1.0.1
   '@swc/core': ^1.2.237
   '@swc/helpers': ^0.4.6
   '@types/node': ^18.7.6
@@ -16,6 +17,7 @@ specifiers:
   typescript: ^4.7.4
 
 dependencies:
+  '@discordjs/rest': 1.0.1
   axios: 0.27.2
   discord.js: 14.2.0
   dotenv: 16.0.1
