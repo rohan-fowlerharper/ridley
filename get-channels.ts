@@ -6,6 +6,6 @@ import type { TextChannel } from 'discord.js'
 export const getReserveAlertsChannel = (client: Client) => {
   return client.channels.cache.get(RESERVE_ALERTS_CHANNEL_ID) as TextChannel
 }
-const getHelpDeskChannel = (client: Client) => {
+export const getHelpDeskChannel = (client: Client) => {
   return client.channels.cache.get(HELP_DESK_CHANNEL_ID) as TextChannel
 }

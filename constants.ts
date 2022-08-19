@@ -10,5 +10,3 @@ export const UNRESOLVED_MESSAGE_THRESHOLD = 3
 // check for unresolved messages every X ms
 // I think this should be 1min < x < 5min in reality
 export const POLLLING_INTERVAL = 5000 // ms
-
-const unused = 5
