@@ -1,10 +1,11 @@
 import 'dotenv/config'
-import type { Message } from 'discord.js'
-import { getReserveAlertsChannel } from './get-channels'
-import { HELP_DESK_CHANNEL_ID } from './constants'
-import { checkForUnresolvedMessages, removeMessage } from './helpers'
 
+import { getReserveAlertsChannel } from './get-channels'
+import { HELP_DESK_CHANNEL_ID, POLLLING_INTERVAL } from './constants'
+import { checkForUnresolvedMessages } from './helpers'
 import { client } from './client'
+
+import type { Message } from 'discord.js'
 
 export type HelpMessage = Pick<
   Message,
@@ -16,7 +17,11 @@ export type HelpMessage = Pick<
   | 'reactions'
   | 'mentions'
 >
-export type HelpMessageMap = typeof helpMessagesWithoutReaction
+export type HelpMessageMap = typeof unresolvedMessages
+
+// stored as a global for now
+// it is either mutated in this file or via explicit params
+const unresolvedMessages = new Map<HelpMessage['id'], HelpMessage>()
 
 client.once('ready', () => {
   console.log(`ready as ${client.user?.tag} at ${client.readyAt}`)
@@ -32,17 +37,12 @@ client.once('ready', () => {
   reserveAlertsChannel.send(`ready as ${client.user?.tag} at ${client.readyAt}`)
 })
 
-// stored as a global for now
-// it is either mutated in this file or via explicit params
-// const helpMessagesWithoutReaction: HelpMessage[] = [] // old
-const helpMessagesWithoutReaction = new Map<HelpMessage['id'], HelpMessage>()
-
 client.on('messageReactionAdd', (reaction) => {
   if (reaction.message.channel.id !== HELP_DESK_CHANNEL_ID) return
 
-  removeMessage(helpMessagesWithoutReaction, reaction.message.id)
+  unresolvedMessages.delete(reaction.message.id)
 
-  checkForUnresolvedMessages(helpMessagesWithoutReaction)
+  checkForUnresolvedMessages(unresolvedMessages)
 })
 
 client.on('messageCreate', async (message) => {
@@ -55,20 +55,20 @@ client.on('messageCreate', async (message) => {
     (mentionedChannel || mentionedRole) &&
     message.reactions.cache.size === 0
   ) {
-    helpMessagesWithoutReaction.set(message.id, message)
+    unresolvedMessages.set(message.id, message)
   }
 
-  checkForUnresolvedMessages(helpMessagesWithoutReaction)
+  checkForUnresolvedMessages(unresolvedMessages)
 })
 
 // basic polling
 const checkEvery = (ms: number) => {
   setInterval(() => {
-    console.log('num unresolved messages: ', helpMessagesWithoutReaction.size)
-    checkForUnresolvedMessages(helpMessagesWithoutReaction)
+    console.log('num unresolved messages:', unresolvedMessages.size)
+    checkForUnresolvedMessages(unresolvedMessages)
   }, ms)
 }
 
-checkEvery(5000)
+checkEvery(POLLLING_INTERVAL)
 
 client.login(process.env.BOT_TOKEN)

@@ -1,32 +1,27 @@
-import { channelMention, roleMention, VoiceChannel } from 'discord.js'
-import { RESERVE_ROLE_ID } from './constants'
+import { channelMention, roleMention } from 'discord.js'
+
+import {
+  RESERVE_ROLE_ID,
+  UNRESOLVED_MESSAGE_THRESHOLD,
+  UNRESOLVED_TIME_THRESHOLD,
+} from './constants'
 import { getReserveAlertsChannel } from './get-channels'
-import { TIMEOUT } from './constants'
 import { client } from './client'
-import { HelpMessage, HelpMessageMap } from './index'
+
+import type { HelpMessage, HelpMessageMap } from './index'
+import type { VoiceChannel } from 'discord.js'
 
 export const hasBeenWaitingWithoutReaction = (message: HelpMessage) => {
   return (
-    Date.now() - message.createdTimestamp > TIMEOUT &&
+    Date.now() - message.createdTimestamp > UNRESOLVED_TIME_THRESHOLD &&
     message.reactions.cache.size === 0
   )
-}
-
-export const removeMessage = (
-  messages: HelpMessageMap,
-  id: HelpMessage['id']
-): void => {
-  const message = messages.get(id)
-
-  if (message) {
-    messages.delete(id)
-  }
 }
 
 export const isNewMessageWithoutReaction = (
   messagesWithoutReaction: HelpMessageMap
 ) => {
-  return messagesWithoutReaction.size > 3
+  return messagesWithoutReaction.size > UNRESOLVED_MESSAGE_THRESHOLD
 }
 
 export function checkForUnresolvedMessages(messages: HelpMessageMap) {
@@ -35,11 +30,8 @@ export function checkForUnresolvedMessages(messages: HelpMessageMap) {
       hasBeenWaitingWithoutReaction(message) ||
       isNewMessageWithoutReaction(messages)
     ) {
-      // resolve message
       sendMessageToReserves(message)
-
-      // remove message
-      removeMessage(messages, message.id)
+      messages.delete(id)
     }
   }
 }
