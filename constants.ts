@@ -4,9 +4,8 @@ export const HELP_DESK_CHANNEL_ID = '1009592156819816500'
 export const RESERVE_ROLE_ID = '1009586205832269938'
 
 // time before unresolved messages are sent to reserves
-export const UNRESOLVED_TIME_THRESHOLD = 5000 // ms
+export const UNRESOLVED_TIME_THRESHOLD = 1000 * 60 * 7 // 7 minutes
 // number of unresolved messages before they are sent to reserves
 export const UNRESOLVED_MESSAGE_THRESHOLD = 3
 // check for unresolved messages every X ms
-// I think this should be 1min < x < 5min in reality
-export const POLLLING_INTERVAL = 5000 // ms
+export const POLLLING_INTERVAL = 1000 * 30 // 30 seconds
