@@ -21,7 +21,17 @@ The unresolved messages are checked at the following times:
 - When a new message is created in `#help-desk`
 - (Optionally) Every x amount of time
 
-When checked, if an unresolved message meets the criteria, a message is sent to a different channel (currently, `#reserves`) and all people with the `@reserves` role is tagged
+When checked, if an unresolved message meets the criteria, a message is sent to a different channel (currently, `#reserve-alerts`) and all people with the `@reserves` role is tagged
+
+## Commands
+
+- Typing `/reserves` in `#reserve-alerts` will toggle the `@reserves` role for yourself
+
+## Roadmap
+
+- Deploy this to Heroku so it's not running ephemerally from my laptop 🥴
+- Add the ability to add multiple reserve and help desk channels
+- Load time thresholds from environment variables so they can be edited on the fly on Heroku (or other platform)
 
 With this, reserves can (in theory) completely ignore the `#help-desk` and listen only for the `#reserves` channel.
 
