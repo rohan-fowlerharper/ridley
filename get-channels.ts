@@ -8,18 +8,16 @@ export function getChannelById(id: string) {
 }
 
 export function getReserveAlertsChannel(categoryChannel: CategoryChannel) {
-  return getChannelByName(categoryChannel, RESERVE_ALERTS_NAME)
+  return getChannelByName(categoryChannel, RESERVE_ALERTS_NAME) as TextChannel
 }
 
 export function getHelpDeskChannel(categoryChannel: CategoryChannel) {
-  return getChannelByName(categoryChannel, HELP_DESK_NAME)
+  return getChannelByName(categoryChannel, HELP_DESK_NAME) as TextChannel
 }
 
 function getChannelByName(
   categoryChannel: CategoryChannel,
   channelName: string
 ) {
-  return categoryChannel.children.cache.find(
-    (c) => c.name === channelName
-  ) as TextChannel
+  return categoryChannel.children.cache.find((c) => c.name === channelName)
 }

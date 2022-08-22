@@ -1,4 +1,4 @@
-import { channelMention, roleMention, TextChannel } from 'discord.js'
+import { channelMention, ChannelType, roleMention } from 'discord.js'
 
 import {
   CATEGORY_IDS,
@@ -16,11 +16,11 @@ import type {
   GuildMember,
   PartialMessage,
   CategoryChannel,
+  TextChannel,
 } from 'discord.js'
 
 export const isActiveCohort = (categoryChannel: CategoryChannel) =>
   CATEGORY_IDS.includes(categoryChannel.id)
-
 export const isFacilitator = (member: GuildMember) => {
   return member?.roles.cache.some((role) =>
     FACILITATOR_ROLES.includes(role.name)
@@ -62,11 +62,10 @@ export function sendMessageToReserves(
   const reserveAlertsChannel = getReserveAlertsChannel(categoryChannel)
   let voiceChannel: VoiceChannel | undefined
 
-  if (
-    message.mentions.channels.size > 0 &&
-    message.mentions.channels.first()?.type === 2
-  ) {
-    voiceChannel = message.mentions.channels.first() as VoiceChannel
+  if (message.mentions.channels.size > 0) {
+    voiceChannel = message.mentions.channels.find(
+      (c) => c.type === ChannelType.GuildVoice
+    ) as VoiceChannel | undefined
   }
 
   let response = `${roleMention(RESERVE_ROLE_ID)}\n${
@@ -80,30 +79,30 @@ export function sendMessageToReserves(
   reserveAlertsChannel.send(response)
 }
 
-type ValidResponse = {
+type ValidChannel = {
   isValid: true
   channel: TextChannel
   categoryChannel: CategoryChannel
 }
-type InvalidResponse = {
+type InvalidChannel = {
   isValid: false
   channel: null
   categoryChannel: null
 }
 export const validateMessage = (
   message: Message | PartialMessage
-): ValidResponse | InvalidResponse => {
-  const invalidResponse: InvalidResponse = {
+): ValidChannel | InvalidChannel => {
+  const invalidChannel: InvalidChannel = {
     isValid: false,
     channel: null,
     categoryChannel: null,
   }
-  if (!(message.channel instanceof TextChannel)) return invalidResponse
+  if (message.channel.type !== ChannelType.GuildText) return invalidChannel
 
   const channel = message.channel
   const categoryChannel = channel.parent
 
-  if (!categoryChannel) return invalidResponse
+  if (!categoryChannel) return invalidChannel
 
   return { isValid: true, channel, categoryChannel }
 }

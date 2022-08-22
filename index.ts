@@ -1,11 +1,5 @@
 import 'dotenv/config'
-import {
-  channelMention,
-  TextChannel,
-  GuildMember,
-  Message,
-  CategoryChannel,
-} from 'discord.js'
+import { channelMention, ChannelType } from 'discord.js'
 
 import { getChannelById, getReserveAlertsChannel } from './get-channels'
 import {
@@ -24,6 +18,8 @@ import {
 } from './helpers'
 import { client } from './client'
 
+import type { GuildMember, Message, CategoryChannel } from 'discord.js'
+
 export type HelpMessage = Pick<
   Message,
   | 'createdTimestamp'
@@ -37,8 +33,10 @@ export type HelpMessage = Pick<
 export type HelpMessageMap = Map<HelpMessage['id'], HelpMessage>
 export type UnresolvedMessages = typeof unresolvedMessages
 
-// stored as a global for now
-// it is either mutated in this file or via explicit params
+/**
+ * stores unresolved messages in a map of categoryId -> messageId -> message
+ * like an array of unresolved messages for each cohort (indexed by categoryId, and then messageId)
+ */
 const unresolvedMessages = new Map<CategoryChannel['id'], HelpMessageMap>(
   CATEGORY_IDS.map((c) => [c, new Map()])
 )
@@ -102,12 +100,15 @@ client.on('messageCreate', async (message) => {
 
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return
-  if (!(interaction.channel instanceof TextChannel)) return
+  if (interaction.channel?.type !== ChannelType.GuildText) return
 
   const channel = interaction.channel
-  const categoryChannel = channel?.parent
+  const categoryChannel = channel.parent
 
-  if (!categoryChannel) return
+  if (!categoryChannel) {
+    await interaction.reply("Wait... This channel isn't in a cohort 🤔")
+    return
+  }
 
   const reserveAlertsChannel = getReserveAlertsChannel(categoryChannel)
 
