@@ -1,15 +1,31 @@
-import { channelMention, roleMention } from 'discord.js'
+import { channelMention, roleMention, TextChannel } from 'discord.js'
 
 import {
+  CATEGORY_IDS,
+  FACILITATOR_ROLES,
   RESERVE_ROLE_ID,
   UNRESOLVED_MESSAGE_THRESHOLD,
   UNRESOLVED_TIME_THRESHOLD,
 } from './constants'
-import { getReserveAlertsChannel } from './get-channels'
-import { client } from './client'
+import { getChannelById, getReserveAlertsChannel } from './get-channels'
 
-import type { HelpMessage, HelpMessageMap } from './index'
-import type { VoiceChannel } from 'discord.js'
+import type { HelpMessage, HelpMessageMap, UnresolvedMessages } from './index'
+import type {
+  VoiceChannel,
+  Message,
+  GuildMember,
+  PartialMessage,
+  CategoryChannel,
+} from 'discord.js'
+
+export const isActiveCohort = (categoryChannel: CategoryChannel) =>
+  CATEGORY_IDS.includes(categoryChannel.id)
+
+export const isFacilitator = (member: GuildMember) => {
+  return member?.roles.cache.some((role) =>
+    FACILITATOR_ROLES.includes(role.name)
+  )
+}
 
 export const hasBeenWaitingWithoutReaction = (message: HelpMessage) => {
   return (
@@ -24,20 +40,26 @@ export const isNewMessageWithoutReaction = (
   return messagesWithoutReaction.size > UNRESOLVED_MESSAGE_THRESHOLD
 }
 
-export function checkForUnresolvedMessages(messages: HelpMessageMap) {
-  for (const [id, message] of messages) {
-    if (
-      hasBeenWaitingWithoutReaction(message) ||
-      isNewMessageWithoutReaction(messages)
-    ) {
-      sendMessageToReserves(message)
-      messages.delete(id)
+export function checkForUnresolvedMessages(messages: UnresolvedMessages) {
+  for (const [categoryId, unresolvedCategoryMessages] of messages) {
+    for (const [id, message] of unresolvedCategoryMessages) {
+      if (
+        hasBeenWaitingWithoutReaction(message) ||
+        isNewMessageWithoutReaction(unresolvedCategoryMessages)
+      ) {
+        const categoryChannel = getChannelById(categoryId) as CategoryChannel
+        sendMessageToReserves(categoryChannel, message)
+        unresolvedCategoryMessages.delete(id)
+      }
     }
   }
 }
 
-export function sendMessageToReserves(message: HelpMessage) {
-  const reserveAlertsChannel = getReserveAlertsChannel(client)
+export function sendMessageToReserves(
+  categoryChannel: CategoryChannel,
+  message: HelpMessage
+) {
+  const reserveAlertsChannel = getReserveAlertsChannel(categoryChannel)
   let voiceChannel: VoiceChannel | undefined
 
   if (
@@ -56,4 +78,32 @@ export function sendMessageToReserves(message: HelpMessage) {
   }
 
   reserveAlertsChannel.send(response)
+}
+
+type ValidResponse = {
+  isValid: true
+  channel: TextChannel
+  categoryChannel: CategoryChannel
+}
+type InvalidResponse = {
+  isValid: false
+  channel: null
+  categoryChannel: null
+}
+export const validateMessage = (
+  message: Message | PartialMessage
+): ValidResponse | InvalidResponse => {
+  const invalidResponse: InvalidResponse = {
+    isValid: false,
+    channel: null,
+    categoryChannel: null,
+  }
+  if (!(message.channel instanceof TextChannel)) return invalidResponse
+
+  const channel = message.channel
+  const categoryChannel = channel.parent
+
+  if (!categoryChannel) return invalidResponse
+
+  return { isValid: true, channel, categoryChannel }
 }

@@ -1,10 +1,25 @@
-import { RESERVE_ALERTS_CHANNEL_ID, HELP_DESK_CHANNEL_ID } from './constants'
+import { HELP_DESK_NAME, RESERVE_ALERTS_NAME } from './constants'
+import { client } from './client'
 
-import type { TextChannel, Client } from 'discord.js'
+import type { TextChannel, CategoryChannel } from 'discord.js'
 
-export const getReserveAlertsChannel = (client: Client) => {
-  return client.channels.cache.get(RESERVE_ALERTS_CHANNEL_ID) as TextChannel
+export function getChannelById(id: string) {
+  return client.channels.cache.get(id)
 }
-export const getHelpDeskChannel = (client: Client) => {
-  return client.channels.cache.get(HELP_DESK_CHANNEL_ID) as TextChannel
+
+export function getReserveAlertsChannel(categoryChannel: CategoryChannel) {
+  return getChannelByName(categoryChannel, RESERVE_ALERTS_NAME)
+}
+
+export function getHelpDeskChannel(categoryChannel: CategoryChannel) {
+  return getChannelByName(categoryChannel, HELP_DESK_NAME)
+}
+
+function getChannelByName(
+  categoryChannel: CategoryChannel,
+  channelName: string
+) {
+  return categoryChannel.children.cache.find(
+    (c) => c.name === channelName
+  ) as TextChannel
 }

@@ -1,17 +1,28 @@
 import 'dotenv/config'
-import { channelMention } from 'discord.js'
-
-import { getReserveAlertsChannel } from './get-channels'
 import {
-  HELP_DESK_CHANNEL_ID,
-  POLLLING_INTERVAL,
-  RESERVE_ALERTS_CHANNEL_ID,
+  channelMention,
+  TextChannel,
+  GuildMember,
+  Message,
+  CategoryChannel,
+} from 'discord.js'
+
+import { getChannelById, getReserveAlertsChannel } from './get-channels'
+import {
+  CATEGORY_IDS,
+  HELP_DESK_NAME,
+  MANAIA_CATEGORY_ID,
+  POLLING_INTERVAL,
+  RESERVE_ALERTS_NAME,
   RESERVE_ROLE_ID,
 } from './constants'
-import { checkForUnresolvedMessages } from './helpers'
+import {
+  checkForUnresolvedMessages,
+  isActiveCohort,
+  isFacilitator,
+  validateMessage,
+} from './helpers'
 import { client } from './client'
-
-import type { GuildMember, Message } from 'discord.js'
 
 export type HelpMessage = Pick<
   Message,
@@ -23,64 +34,87 @@ export type HelpMessage = Pick<
   | 'reactions'
   | 'mentions'
 >
-export type HelpMessageMap = typeof unresolvedMessages
+export type HelpMessageMap = Map<HelpMessage['id'], HelpMessage>
+export type UnresolvedMessages = typeof unresolvedMessages
 
 // stored as a global for now
 // it is either mutated in this file or via explicit params
-const unresolvedMessages = new Map<HelpMessage['id'], HelpMessage>()
+const unresolvedMessages = new Map<CategoryChannel['id'], HelpMessageMap>(
+  CATEGORY_IDS.map((c) => [c, new Map()])
+)
 
 client.once('ready', () => {
   console.log(`ready as ${client.user?.tag} at ${client.readyAt}`)
 
   // lol
   client.user?.setPresence({
-    activities: [{ name: 'trying to make this thing work argh' }],
+    activities: [{ name: 'deploying reserves...' }],
     status: 'idle',
   })
+  const manaiaCategoryChannel = getChannelById(
+    MANAIA_CATEGORY_ID
+  ) as CategoryChannel
+  const reserveAlertsChannel = getReserveAlertsChannel(manaiaCategoryChannel)
 
-  const reserveAlertsChannel = getReserveAlertsChannel(client)
-
-  reserveAlertsChannel.send(`ready as ${client.user?.tag} at ${client.readyAt}`)
+  reserveAlertsChannel.send(`Ready to deploy the Reserves 🪖`)
 })
 
 client.on('messageReactionAdd', (reaction) => {
-  if (reaction.message.channel.id !== HELP_DESK_CHANNEL_ID) return
+  const { isValid, channel, categoryChannel } = validateMessage(
+    reaction.message
+  )
+  if (!isValid) return
+  if (!isActiveCohort(categoryChannel)) return
+  if (channel.name !== HELP_DESK_NAME) return
 
-  unresolvedMessages.delete(reaction.message.id)
+  const unresolvedMessagesForCategory = unresolvedMessages.get(
+    categoryChannel.id
+  )
+  if (!unresolvedMessagesForCategory) return
+
+  unresolvedMessagesForCategory.delete(reaction.message.id)
 
   checkForUnresolvedMessages(unresolvedMessages)
 })
 
 client.on('messageCreate', async (message) => {
-  if (message.channelId !== HELP_DESK_CHANNEL_ID || message.author.bot) return
+  const { isValid, channel, categoryChannel } = validateMessage(message)
+  if (!isValid) return
+
+  if (!isActiveCohort(categoryChannel)) return
+  if (channel.name !== HELP_DESK_NAME) return
+
+  const unresolvedMessagesForCategory = unresolvedMessages.get(
+    categoryChannel.id
+  )
+
+  if (!unresolvedMessagesForCategory) return
 
   const mentionedChannel = message.mentions.channels.first()
   const mentionedRole = message.mentions.roles.first()
 
-  if (
-    (mentionedChannel || mentionedRole) &&
-    message.reactions.cache.size === 0
-  ) {
-    unresolvedMessages.set(message.id, message)
+  if (mentionedChannel || mentionedRole) {
+    unresolvedMessagesForCategory.set(message.id, message)
   }
 
   checkForUnresolvedMessages(unresolvedMessages)
 })
 
-const facilitatorRoles = [
-  'dev academy staff',
-  'facilitators-all-campuses',
-  'online-facilitators',
-  'wellington-facilitators',
-  'auckland-facilitators',
-]
-
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return
-  if (interaction.channelId !== RESERVE_ALERTS_CHANNEL_ID) {
+  if (!(interaction.channel instanceof TextChannel)) return
+
+  const channel = interaction.channel
+  const categoryChannel = channel?.parent
+
+  if (!categoryChannel) return
+
+  const reserveAlertsChannel = getReserveAlertsChannel(categoryChannel)
+
+  if (channel.name !== RESERVE_ALERTS_NAME) {
     await interaction.reply(
       `These are not the channels you're looking for 🤖. Try ${channelMention(
-        RESERVE_ALERTS_CHANNEL_ID
+        reserveAlertsChannel.id
       )}`
     )
     return
@@ -88,16 +122,12 @@ client.on('interactionCreate', async (interaction) => {
 
   const member = interaction.member as GuildMember
 
-  if (
-    !member?.roles.cache.some((role) => facilitatorRoles.includes(role.name))
-  ) {
+  if (!isFacilitator(member)) {
     await interaction.reply('Wait... you need to be a facilitator to do that')
     return
   }
 
-  const { commandName } = interaction
-
-  if (commandName === 'reserves') {
+  if (interaction.commandName === 'reserves') {
     try {
       if (member?.roles.cache.some((role) => role.id === RESERVE_ROLE_ID)) {
         await member.roles.remove(RESERVE_ROLE_ID)
@@ -118,11 +148,10 @@ client.on('interactionCreate', async (interaction) => {
 // basic polling
 const checkEvery = (ms: number) => {
   setInterval(() => {
-    console.log('num unresolved messages:', unresolvedMessages.size)
     checkForUnresolvedMessages(unresolvedMessages)
   }, ms)
 }
 
-checkEvery(POLLLING_INTERVAL)
+checkEvery(POLLING_INTERVAL)
 
 client.login(process.env.BOT_TOKEN)

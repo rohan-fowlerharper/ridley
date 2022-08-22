@@ -14,7 +14,6 @@ const commands = [
     .setName('reserves')
     .setDescription('Toggle the @reserves for yourself!'),
 ].map((c) => c.toJSON())
-
 const restClient = new REST({ version: '10' }).setToken(BOT_TOKEN)
 
 restClient

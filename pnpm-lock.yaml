@@ -18,21 +18,21 @@ specifiers:
 
 dependencies:
   '@discordjs/rest': 1.0.1
+  '@swc/core': 1.2.237
+  '@swc/helpers': 0.4.6
   axios: 0.27.2
   discord.js: 14.2.0
   dotenv: 16.0.1
   ts-node: 10.9.1_5cqfkg2z5ac3vzo7tpgnf47ov4
+  typescript: 4.7.4
 
 devDependencies:
-  '@swc/core': 1.2.237
-  '@swc/helpers': 0.4.6
   '@types/node': 18.7.6
   '@typescript-eslint/parser': 5.33.1_4rv7y5c6xz3vfxwhbrcxxi73bq
   eslint: 8.22.0
   eslint-config-eda: 1.2.0_jqmxtvrcix4mlemss42xhanr4u
   prettier: 2.7.1
   regenerator-runtime: 0.13.9
-  typescript: 4.7.4
 
 packages:
 
@@ -420,6 +420,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@swc/wasm': 1.2.122
+    dev: false
     optional: true
 
   /@swc/core-android-arm64/1.2.237:
@@ -430,6 +431,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@swc/wasm': 1.2.130
+    dev: false
     optional: true
 
   /@swc/core-darwin-arm64/1.2.237:
@@ -438,6 +440,7 @@ packages:
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@swc/core-darwin-x64/1.2.237:
@@ -446,6 +449,7 @@ packages:
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@swc/core-freebsd-x64/1.2.237:
@@ -456,6 +460,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@swc/wasm': 1.2.130
+    dev: false
     optional: true
 
   /@swc/core-linux-arm-gnueabihf/1.2.237:
@@ -466,6 +471,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@swc/wasm': 1.2.130
+    dev: false
     optional: true
 
   /@swc/core-linux-arm64-gnu/1.2.237:
@@ -474,6 +480,7 @@ packages:
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@swc/core-linux-arm64-musl/1.2.237:
@@ -482,6 +489,7 @@ packages:
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@swc/core-linux-x64-gnu/1.2.237:
@@ -490,6 +498,7 @@ packages:
     cpu: [x64]
     os: [linux]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@swc/core-linux-x64-musl/1.2.237:
@@ -498,6 +507,7 @@ packages:
     cpu: [x64]
     os: [linux]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@swc/core-win32-arm64-msvc/1.2.237:
@@ -508,6 +518,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@swc/wasm': 1.2.130
+    dev: false
     optional: true
 
   /@swc/core-win32-ia32-msvc/1.2.237:
@@ -518,6 +529,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@swc/wasm': 1.2.130
+    dev: false
     optional: true
 
   /@swc/core-win32-x64-msvc/1.2.237:
@@ -526,6 +538,7 @@ packages:
     cpu: [x64]
     os: [win32]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@swc/core/1.2.237:
@@ -547,21 +560,24 @@ packages:
       '@swc/core-win32-arm64-msvc': 1.2.237
       '@swc/core-win32-ia32-msvc': 1.2.237
       '@swc/core-win32-x64-msvc': 1.2.237
+    dev: false
 
   /@swc/helpers/0.4.6:
     resolution: {integrity: sha512-jUMFa2/gFJOBVBnd3ZZHKRNsgqD0OQQhJMlOFR5B5stMbrUlTQoI7rXORtIGb+M/BZAU/cuI68nho4De3gXzWA==}
     dependencies:
       tslib: 2.4.0
-    dev: true
+    dev: false
 
   /@swc/wasm/1.2.122:
     resolution: {integrity: sha512-sM1VCWQxmNhFtdxME+8UXNyPNhxNu7zdb6ikWpz0YKAQQFRGT5ThZgJrubEpah335SUToNg8pkdDF7ibVCjxbQ==}
     requiresBuild: true
+    dev: false
     optional: true
 
   /@swc/wasm/1.2.130:
     resolution: {integrity: sha512-rNcJsBxS70+pv8YUWwf5fRlWX6JoY/HJc25HD/F8m6Kv7XhJdqPPMhyX6TKkUBPAG7TWlZYoxa+rHAjPy4Cj3Q==}
     requiresBuild: true
+    dev: false
     optional: true
 
   /@tokenizer/token/0.3.0:
@@ -2410,6 +2426,7 @@ packages:
 
   /tslib/2.4.0:
     resolution: {integrity: sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ==}
+    dev: false
 
   /tsutils/3.21.0_typescript@4.7.4:
     resolution: {integrity: sha512-mHKK3iUXL+3UF6xL5k0PEhKRUBKPBCv/+RkEOpjRWxxx27KKRBmmA60A9pgOUvMi8GKhRMPEmjBRPzs2W7O1OA==}
