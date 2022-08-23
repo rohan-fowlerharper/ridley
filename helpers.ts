@@ -1,4 +1,11 @@
-import { channelMention, ChannelType, roleMention } from 'discord.js'
+import {
+  Channel,
+  channelMention,
+  ChannelType,
+  EmbedBuilder,
+  roleMention,
+  VoiceChannel,
+} from 'discord.js'
 
 import {
   CATEGORY_IDS,
@@ -9,18 +16,17 @@ import {
 } from './constants'
 import { getChannelById, getReserveAlertsChannel } from './get-channels'
 
-import type { HelpMessage, HelpMessageMap, UnresolvedMessages } from './index'
 import type {
-  VoiceChannel,
-  Message,
-  GuildMember,
-  PartialMessage,
-  CategoryChannel,
-  TextChannel,
-} from 'discord.js'
+  HelpMessage,
+  HelpMessageMap,
+  MessageStatus,
+  UnresolvedMessages,
+} from './index'
+import type { GuildMember, CategoryChannel, TextChannel } from 'discord.js'
 
 export const isActiveCohort = (categoryChannel: CategoryChannel) =>
   CATEGORY_IDS.includes(categoryChannel.id)
+
 export const isFacilitator = (member: GuildMember) => {
   return member?.roles.cache.some((role) =>
     FACILITATOR_ROLES.includes(role.name)
@@ -34,23 +40,42 @@ export const hasBeenWaitingWithoutReaction = (message: HelpMessage) => {
   )
 }
 
-export const isNewMessageWithoutReaction = (
-  messagesWithoutReaction: HelpMessageMap
-) => {
-  return messagesWithoutReaction.size > UNRESOLVED_MESSAGE_THRESHOLD
+export const isNewMessageWithoutReaction = (messages: HelpMessageMap) => {
+  return getNumberOfUnresolvedMessages(messages) > UNRESOLVED_MESSAGE_THRESHOLD
+}
+
+export const getNumberOfUnresolvedMessages = (messages: HelpMessageMap) => {
+  return filterMessagesByStatus(messages, 'unresolved').size
+}
+
+export const filterMessagesByStatus = (
+  messages: HelpMessageMap,
+  status: MessageStatus
+): HelpMessageMap => {
+  return new Map([...messages].filter(([, m]) => m.status === status))
 }
 
 export function checkForUnresolvedMessages(messages: UnresolvedMessages) {
   for (const [categoryId, unresolvedCategoryMessages] of messages) {
-    for (const [id, message] of unresolvedCategoryMessages) {
+    const categoryChannel = getChannelById<CategoryChannel>(categoryId)
+    for (const [, message] of unresolvedCategoryMessages) {
       if (
-        hasBeenWaitingWithoutReaction(message) ||
-        isNewMessageWithoutReaction(unresolvedCategoryMessages)
+        (hasBeenWaitingWithoutReaction(message) ||
+          isNewMessageWithoutReaction(unresolvedCategoryMessages)) &&
+        message.status === 'unresolved'
       ) {
-        const categoryChannel = getChannelById(categoryId) as CategoryChannel
         sendMessageToReserves(categoryChannel, message)
-        unresolvedCategoryMessages.delete(id)
+        message.status = 'sentToLocalReserve'
       }
+    }
+    if (categoryChannel.name === 'Manaia 2022') {
+      console.log({
+        unresolved: getNumberOfUnresolvedMessages(unresolvedCategoryMessages),
+        sentLocal: filterMessagesByStatus(
+          unresolvedCategoryMessages,
+          'sentToLocalReserve'
+        ).size,
+      })
     }
   }
 }
@@ -68,15 +93,35 @@ export function sendMessageToReserves(
     ) as VoiceChannel | undefined
   }
 
-  let response = `${roleMention(RESERVE_ROLE_ID)}\n${
-    message.author.username
-  } asked for help: ${(Date.now() - message.createdTimestamp) / 1000}s ago`
+  let response = `${roleMention(RESERVE_ROLE_ID)}`
 
   if (voiceChannel) {
-    response += `\nVoice channel: ${channelMention(voiceChannel.id)}`
+    response += ` ${channelMention(voiceChannel.id)}`
   }
 
-  reserveAlertsChannel.send(response)
+  response += '\n'
+
+  const embed = new EmbedBuilder()
+    .setDescription(`>>> ${message.content}`)
+    .setAuthor({
+      name: message.author.username,
+      iconURL: message.author.displayAvatarURL(),
+    })
+    .addFields(
+      { name: 'Message ID', value: message.id, inline: true },
+      { name: '\u200B', value: '\u200B', inline: true },
+      {
+        name: 'Time',
+        value: `${Math.ceil(
+          (Date.now() - message.createdTimestamp) / 1000
+        )}s ago`,
+        inline: true,
+      }
+    )
+    .setTimestamp(message.createdTimestamp)
+    .setColor('#e91e63')
+
+  reserveAlertsChannel.send({ embeds: [embed], content: response })
 }
 
 type ValidChannel = {
@@ -89,17 +134,18 @@ type InvalidChannel = {
   channel: null
   categoryChannel: null
 }
-export const validateMessage = (
-  message: Message | PartialMessage
+export const validateChildChannel = (
+  channel: Channel | undefined
 ): ValidChannel | InvalidChannel => {
   const invalidChannel: InvalidChannel = {
     isValid: false,
     channel: null,
     categoryChannel: null,
   }
-  if (message.channel.type !== ChannelType.GuildText) return invalidChannel
+  if (!channel) return invalidChannel
 
-  const channel = message.channel
+  if (channel.type !== ChannelType.GuildText) return invalidChannel
+
   const categoryChannel = channel.parent
 
   if (!categoryChannel) return invalidChannel
