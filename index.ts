@@ -14,11 +14,20 @@ import {
   checkForUnresolvedMessages,
   isActiveCohort,
   isFacilitator,
-  validateMessage,
+  validateChildChannel,
 } from './helpers'
 import { client } from './client'
 
 import type { GuildMember, Message, CategoryChannel } from 'discord.js'
+import {
+  handleHelpDeskReactions,
+  handleReserveAlertsReactions,
+} from './handlers'
+
+export type MessageStatus =
+  | 'unresolved'
+  | 'sentToLocalReserve'
+  | 'sentToGlobalReserve'
 
 export type HelpMessage = Pick<
   Message,
@@ -29,7 +38,10 @@ export type HelpMessage = Pick<
   | 'author'
   | 'reactions'
   | 'mentions'
->
+> & {
+  status: MessageStatus
+}
+
 export type HelpMessageMap = Map<HelpMessage['id'], HelpMessage>
 export type UnresolvedMessages = typeof unresolvedMessages
 
@@ -49,34 +61,48 @@ client.once('ready', () => {
     activities: [{ name: 'deploying reserves...' }],
     status: 'idle',
   })
-  const manaiaCategoryChannel = getChannelById(
-    MANAIA_CATEGORY_ID
-  ) as CategoryChannel
+
+  const manaiaCategoryChannel =
+    getChannelById<CategoryChannel>(MANAIA_CATEGORY_ID)
+
+  if (!manaiaCategoryChannel) return
+
   const reserveAlertsChannel = getReserveAlertsChannel(manaiaCategoryChannel)
 
   reserveAlertsChannel.send(`Ready to deploy the Reserves 🪖`)
 })
 
 client.on('messageReactionAdd', (reaction) => {
-  const { isValid, channel, categoryChannel } = validateMessage(
-    reaction.message
+  const { isValid, channel, categoryChannel } = validateChildChannel(
+    reaction.message.channel
   )
   if (!isValid) return
   if (!isActiveCohort(categoryChannel)) return
-  if (channel.name !== HELP_DESK_NAME) return
 
-  const unresolvedMessagesForCategory = unresolvedMessages.get(
-    categoryChannel.id
-  )
-  if (!unresolvedMessagesForCategory) return
-
-  unresolvedMessagesForCategory.delete(reaction.message.id)
-
-  checkForUnresolvedMessages(unresolvedMessages)
+  switch (channel.name) {
+    case HELP_DESK_NAME:
+      handleHelpDeskReactions({
+        reaction,
+        channel,
+        categoryChannel,
+        messages: unresolvedMessages,
+      })
+      break
+    case RESERVE_ALERTS_NAME:
+      handleReserveAlertsReactions({
+        reaction,
+        channel,
+        categoryChannel,
+        messages: unresolvedMessages,
+      })
+  }
 })
 
+// TODO: refactor to handlers/message-create.ts or handlers.ts
 client.on('messageCreate', async (message) => {
-  const { isValid, channel, categoryChannel } = validateMessage(message)
+  const { isValid, channel, categoryChannel } = validateChildChannel(
+    message.channel
+  )
   if (!isValid) return
 
   if (!isActiveCohort(categoryChannel)) return
@@ -92,7 +118,10 @@ client.on('messageCreate', async (message) => {
   const mentionedRole = message.mentions.roles.first()
 
   if (mentionedChannel || mentionedRole) {
-    unresolvedMessagesForCategory.set(message.id, message)
+    unresolvedMessagesForCategory.set(message.id, {
+      ...message,
+      status: 'unresolved',
+    })
   }
 
   checkForUnresolvedMessages(unresolvedMessages)

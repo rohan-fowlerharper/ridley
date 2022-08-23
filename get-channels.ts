@@ -1,10 +1,10 @@
 import { HELP_DESK_NAME, RESERVE_ALERTS_NAME } from './constants'
 import { client } from './client'
 
-import type { TextChannel, CategoryChannel } from 'discord.js'
+import { TextChannel, CategoryChannel, Channel } from 'discord.js'
 
-export function getChannelById(id: string) {
-  return client.channels.cache.get(id)
+export function getChannelById<TChannel extends Channel>(id: Channel['id']) {
+  return client.channels.cache.get(id) as TChannel
 }
 
 export function getReserveAlertsChannel(categoryChannel: CategoryChannel) {
