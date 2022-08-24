@@ -24,7 +24,7 @@ export async function handleReserveAlertsReactionRemove({
   const helpDeskMessage = helpDeskChannel.messages.cache.get(messageId)
   if (!helpDeskMessage) return
 
-  await removeBotReactions(helpDeskMessage, client, reaction.emoji)
+  await removeBotReaction(helpDeskMessage, client.user?.id!, reaction.emoji)
 }
 
 export async function handleHelpDeskReactionRemove({
@@ -44,31 +44,26 @@ export async function handleHelpDeskReactionRemove({
     const reserveAlertsMessage = reserveAlertsChannel?.messages.cache.get(
       message.dispatchedMessageId
     )
-    console.log(reserveAlertsMessage)
+
     if (!reserveAlertsMessage) return
 
-    await removeBotReactions(reserveAlertsMessage, client, reaction.emoji)
+    await removeBotReaction(
+      reserveAlertsMessage,
+      client.user?.id!,
+      reaction.emoji
+    )
+    // TODO: decide if we want to change message status back to something
   }
 }
 
-async function removeBotReactions(
+async function removeBotReaction(
   message: TDiscord.Message,
-  client: TDiscord.Client,
+  botId: string,
   emoji: TDiscord.GuildEmoji | TDiscord.ReactionEmoji
 ) {
-  const botId = client.user?.id!
-  const botReactions = message.reactions.cache.filter((r) =>
-    r.users.cache.has(botId)
+  const botReaction = message.reactions.cache.find(
+    (r) => r.users.cache.has(botId) && r.emoji.name === emoji.name
   )
 
-  try {
-    for (const botReaction of botReactions.values()) {
-      if (botReaction.emoji.name === emoji.name) {
-        await botReaction.users.remove(botId)
-        break
-      }
-    }
-  } catch (err) {
-    return
-  }
+  await botReaction?.users.remove(botId)
 }
