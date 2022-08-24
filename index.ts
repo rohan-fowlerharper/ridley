@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import { channelMention, ChannelType } from 'discord.js'
+import type * as TDiscord from 'discord.js'
 
 import { getChannelById, getReserveAlertsChannel } from './get-channels'
 import {
@@ -17,8 +18,6 @@ import {
   validateChildChannel,
 } from './helpers'
 import { client } from './client'
-
-import type * as TDiscord from 'discord.js'
 import {
   handleHelpDeskReactions,
   handleReserveAlertsReactions,

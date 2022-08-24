@@ -22,7 +22,7 @@ export async function handleHelpDeskReactions({
   if (!unresolvedMessagesForCategory) return
 
   const message = unresolvedMessagesForCategory.get(reaction.message.id)
-  console.log(message)
+
   if (message?.dispatchedMessageId) {
     const reserveAlertsChannel = getReserveAlertsChannel(categoryChannel)
 
