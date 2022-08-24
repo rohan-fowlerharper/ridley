@@ -1,6 +1,6 @@
 export const DAA_SERVER_ID = '690141234596937780'
 export const RESERVE_ROLE_ID = '1009586205832269938'
-export const HELP_DESK_NAME = 'help-desk' // or mock-help-desk for dev
+export const HELP_DESK_NAME = 'mock-help-desk' // or mock-help-desk for dev
 export const RESERVE_ALERTS_NAME = 'reserve-alerts'
 
 export const MANAIA_CATEGORY_ID = '999052406870507592'
