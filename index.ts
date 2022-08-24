@@ -166,6 +166,27 @@ client.on('messageCreate', async (message) => {
   await checkForUnresolvedMessages(unresolvedMessages)
 })
 
+client.on('messageDelete', (message) => {
+  // TODO: yep most of this block could be refactored
+  // lines 172-184 and 142-154
+  const { isValid, channel, categoryChannel } = validateChildChannel(
+    message.channel
+  )
+  if (!isValid) return
+
+  if (!isActiveCohort(categoryChannel)) return
+  if (channel.name !== HELP_DESK_NAME) return
+
+  const unresolvedMessagesForCategory = unresolvedMessages.get(
+    categoryChannel.id
+  )
+
+  if (!unresolvedMessagesForCategory) return
+
+  const didDelete = unresolvedMessagesForCategory.delete(message.id)
+  console.log({ didDelete })
+})
+
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return
   if (interaction.channel?.type !== ChannelType.GuildText) return
