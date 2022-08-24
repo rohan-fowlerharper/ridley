@@ -1,10 +1,8 @@
 import {
-  Channel,
   channelMention,
   ChannelType,
   EmbedBuilder,
   roleMention,
-  VoiceChannel,
 } from 'discord.js'
 
 import {
@@ -22,12 +20,12 @@ import type {
   MessageStatus,
   UnresolvedMessages,
 } from './index'
-import type { GuildMember, CategoryChannel, TextChannel } from 'discord.js'
+import type * as TDiscord from 'discord.js'
 
-export const isActiveCohort = (categoryChannel: CategoryChannel) =>
+export const isActiveCohort = (categoryChannel: TDiscord.CategoryChannel) =>
   CATEGORY_IDS.includes(categoryChannel.id)
 
-export const isFacilitator = (member: GuildMember) => {
+export const isFacilitator = (member: TDiscord.GuildMember) => {
   return member?.roles.cache.some((role) =>
     FACILITATOR_ROLES.includes(role.name)
   )
@@ -55,10 +53,10 @@ export const filterMessagesByStatus = (
   return new Map([...messages].filter(([, m]) => m.status === status))
 }
 
-export function checkForUnresolvedMessages(messages: UnresolvedMessages) {
+export async function checkForUnresolvedMessages(messages: UnresolvedMessages) {
   for (const [categoryId, unresolvedCategoryMessages] of messages) {
-    const categoryChannel = getChannelById<CategoryChannel>(categoryId)
-    for (const [, message] of unresolvedCategoryMessages) {
+    const categoryChannel = getChannelById<TDiscord.CategoryChannel>(categoryId)
+    for (const [id, message] of unresolvedCategoryMessages) {
       if (
         (hasBeenWaitingWithoutReaction(message) ||
           isNewMessageWithoutReaction(unresolvedCategoryMessages)) &&
@@ -66,6 +64,11 @@ export function checkForUnresolvedMessages(messages: UnresolvedMessages) {
       ) {
         sendMessageToReserves(categoryChannel, message)
         message.status = 'sentToLocalReserve'
+      }
+      // delete message if in cache for more than an hour
+      const CACHE_TIMEOUT = 1000 * 60 * 60
+      if (Date.now() - message.createdTimestamp > CACHE_TIMEOUT) {
+        unresolvedCategoryMessages.delete(id)
       }
     }
     if (categoryChannel.name === 'Manaia 2022') {
@@ -80,17 +83,17 @@ export function checkForUnresolvedMessages(messages: UnresolvedMessages) {
   }
 }
 
-export function sendMessageToReserves(
-  categoryChannel: CategoryChannel,
+export async function sendMessageToReserves(
+  categoryChannel: TDiscord.CategoryChannel,
   message: HelpMessage
 ) {
   const reserveAlertsChannel = getReserveAlertsChannel(categoryChannel)
-  let voiceChannel: VoiceChannel | undefined
+  let voiceChannel: TDiscord.VoiceChannel | undefined
 
   if (message.mentions.channels.size > 0) {
     voiceChannel = message.mentions.channels.find(
       (c) => c.type === ChannelType.GuildVoice
-    ) as VoiceChannel | undefined
+    ) as TDiscord.VoiceChannel | undefined
   }
 
   let response = `${roleMention(RESERVE_ROLE_ID)}`
@@ -121,13 +124,18 @@ export function sendMessageToReserves(
     .setTimestamp(message.createdTimestamp)
     .setColor('#e91e63')
 
-  reserveAlertsChannel.send({ embeds: [embed], content: response })
+  const sentMessage = await reserveAlertsChannel.send({
+    embeds: [embed],
+    content: response,
+  })
+
+  message.dispatchedMessageId = sentMessage.id
 }
 
 type ValidChannel = {
   isValid: true
-  channel: TextChannel
-  categoryChannel: CategoryChannel
+  channel: TDiscord.TextChannel
+  categoryChannel: TDiscord.CategoryChannel
 }
 type InvalidChannel = {
   isValid: false
@@ -135,7 +143,7 @@ type InvalidChannel = {
   categoryChannel: null
 }
 export const validateChildChannel = (
-  channel: Channel | undefined
+  channel: TDiscord.Channel | undefined
 ): ValidChannel | InvalidChannel => {
   const invalidChannel: InvalidChannel = {
     isValid: false,
@@ -151,4 +159,14 @@ export const validateChildChannel = (
   if (!categoryChannel) return invalidChannel
 
   return { isValid: true, channel, categoryChannel }
+}
+
+export function resolveMessage(
+  messages: HelpMessageMap,
+  messageId: HelpMessage['id']
+) {
+  const message = messages.get(messageId)
+  if (message) {
+    message.status = 'resolved'
+  }
 }

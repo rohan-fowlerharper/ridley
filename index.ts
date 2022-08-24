@@ -18,19 +18,24 @@ import {
 } from './helpers'
 import { client } from './client'
 
-import type { GuildMember, Message, CategoryChannel } from 'discord.js'
+import type * as TDiscord from 'discord.js'
 import {
   handleHelpDeskReactions,
   handleReserveAlertsReactions,
-} from './handlers'
+} from './handlers/reactionAdd'
+import {
+  handleHelpDeskReactionRemove,
+  handleReserveAlertsReactionRemove,
+} from './handlers/reactionRemove'
 
 export type MessageStatus =
   | 'unresolved'
   | 'sentToLocalReserve'
   | 'sentToGlobalReserve'
+  | 'resolved'
 
 export type HelpMessage = Pick<
-  Message,
+  TDiscord.Message,
   | 'createdTimestamp'
   | 'id'
   | 'channelId'
@@ -40,6 +45,7 @@ export type HelpMessage = Pick<
   | 'mentions'
 > & {
   status: MessageStatus
+  dispatchedMessageId?: string
 }
 
 export type HelpMessageMap = Map<HelpMessage['id'], HelpMessage>
@@ -49,9 +55,10 @@ export type UnresolvedMessages = typeof unresolvedMessages
  * stores unresolved messages in a map of categoryId -> messageId -> message
  * like an array of unresolved messages for each cohort (indexed by categoryId, and then messageId)
  */
-const unresolvedMessages = new Map<CategoryChannel['id'], HelpMessageMap>(
-  CATEGORY_IDS.map((c) => [c, new Map()])
-)
+const unresolvedMessages = new Map<
+  TDiscord.CategoryChannel['id'],
+  HelpMessageMap
+>(CATEGORY_IDS.map((c) => [c, new Map()]))
 
 client.once('ready', () => {
   console.log(`ready as ${client.user?.tag} at ${client.readyAt}`)
@@ -63,13 +70,46 @@ client.once('ready', () => {
   })
 
   const manaiaCategoryChannel =
-    getChannelById<CategoryChannel>(MANAIA_CATEGORY_ID)
+    getChannelById<TDiscord.CategoryChannel>(MANAIA_CATEGORY_ID)
 
   if (!manaiaCategoryChannel) return
 
   const reserveAlertsChannel = getReserveAlertsChannel(manaiaCategoryChannel)
 
   reserveAlertsChannel.send(`Ready to deploy the Reserves 🪖`)
+})
+
+client.on('messageReactionRemove', (reaction) => {
+  if (reaction.partial) return
+  const { isValid, channel, categoryChannel } = validateChildChannel(
+    reaction.message.channel
+  )
+  if (!isValid) return
+  if (!isActiveCohort(categoryChannel)) return
+  const unresolvedMessagesForCategory = unresolvedMessages.get(
+    categoryChannel.id
+  )
+  if (!unresolvedMessagesForCategory) return
+
+  switch (channel.name) {
+    case RESERVE_ALERTS_NAME:
+      handleReserveAlertsReactionRemove({
+        reaction,
+        channel,
+        unresolvedMessagesForCategory,
+        categoryChannel,
+        client,
+      })
+      break
+    case HELP_DESK_NAME:
+      handleHelpDeskReactionRemove({
+        reaction,
+        channel,
+        unresolvedMessagesForCategory,
+        categoryChannel,
+        client,
+      })
+  }
 })
 
 client.on('messageReactionAdd', (reaction) => {
@@ -124,7 +164,7 @@ client.on('messageCreate', async (message) => {
     })
   }
 
-  checkForUnresolvedMessages(unresolvedMessages)
+  await checkForUnresolvedMessages(unresolvedMessages)
 })
 
 client.on('interactionCreate', async (interaction) => {
@@ -150,7 +190,7 @@ client.on('interactionCreate', async (interaction) => {
     return
   }
 
-  const member = interaction.member as GuildMember
+  const member = interaction.member as TDiscord.GuildMember
 
   if (!isFacilitator(member)) {
     await interaction.reply('Wait... you need to be a facilitator to do that')
@@ -177,8 +217,8 @@ client.on('interactionCreate', async (interaction) => {
 
 // basic polling
 const checkEvery = (ms: number) => {
-  setInterval(() => {
-    checkForUnresolvedMessages(unresolvedMessages)
+  setInterval(async () => {
+    await checkForUnresolvedMessages(unresolvedMessages)
   }, ms)
 }
 
