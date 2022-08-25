@@ -179,9 +179,6 @@ export async function getActiveReserves(guild: TDiscord.Guild) {
   const membersWithRole = members.filter((m) => {
     return m.roles.cache.has(RESERVE_ROLE_ID)
   })
-  console.log(membersWithRole.map((m) => m.user.tag))
-  // console.log(role?.members)
-  // const members = role?.members.map((m) => m.user.tag)
-  // console.log(members)
+
   return membersWithRole
 }
