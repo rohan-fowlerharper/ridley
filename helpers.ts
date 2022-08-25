@@ -170,3 +170,15 @@ export function resolveMessage(
     message.status = 'resolved'
   }
 }
+
+export async function getActiveReserves(guild: TDiscord.Guild) {
+  // get all users with the role @reserves
+  console.log('hello')
+  const members = await guild.members.fetch()
+
+  const membersWithRole = members.filter((m) => {
+    return m.roles.cache.has(RESERVE_ROLE_ID)
+  })
+
+  return membersWithRole
+}

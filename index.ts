@@ -1,10 +1,16 @@
 import 'dotenv/config'
-import { channelMention, ChannelType } from 'discord.js'
+import {
+  channelMention,
+  ChannelType,
+  EmbedBuilder,
+  userMention,
+} from 'discord.js'
 import type * as TDiscord from 'discord.js'
 
 import { getChannelById, getReserveAlertsChannel } from './get-channels'
 import {
   CATEGORY_IDS,
+  DAA_SERVER_ID,
   HELP_DESK_NAME,
   MANAIA_CATEGORY_ID,
   POLLING_INTERVAL,
@@ -13,6 +19,7 @@ import {
 } from './constants'
 import {
   checkForUnresolvedMessages,
+  getActiveReserves,
   isActiveCohort,
   isFacilitator,
   validateChildChannel,
@@ -59,7 +66,7 @@ const unresolvedMessages = new Map<
   HelpMessageMap
 >(CATEGORY_IDS.map((c) => [c, new Map()]))
 
-client.once('ready', () => {
+client.once('ready', async (client) => {
   console.log(`ready as ${client.user?.tag} at ${client.readyAt}`)
 
   // lol
@@ -75,7 +82,28 @@ client.once('ready', () => {
 
   const reserveAlertsChannel = getReserveAlertsChannel(manaiaCategoryChannel)
 
-  reserveAlertsChannel.send(`Ready to deploy the Reserves 🪖`)
+  const reserves = await getActiveReserves(
+    client.guilds.cache.get(DAA_SERVER_ID)!
+  )
+
+  const embed = new EmbedBuilder()
+    .setTitle('Ready to deploy the Reserves 🪖')
+    .addFields(
+      {
+        name: 'Active Reserves:',
+        value: reserves.map((r) => userMention(r.user.id)).join(', '),
+      },
+      {
+        name: 'Total:',
+        value: reserves.size.toString(),
+      }
+    )
+    .setColor('#e91e63')
+
+  reserveAlertsChannel.send({
+    content: `Reserver Alerter started`,
+    embeds: [embed],
+  })
 })
 
 client.on('messageReactionRemove', (reaction) => {
