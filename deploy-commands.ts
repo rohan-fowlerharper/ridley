@@ -12,7 +12,25 @@ if (!BOT_TOKEN || !APP_ID) {
 const commands = [
   new SlashCommandBuilder()
     .setName('reserves')
-    .setDescription('Toggle the @reserves for yourself!'),
+    .setDescription('Use the reserves commands')
+    .addSubcommand((subcommand) =>
+      subcommand.setName('list').setDescription('list all reserves')
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('toggle')
+        .setDescription('toggle the @reserves role for yourself')
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('join')
+        .setDescription('add the @reserves role for yourself')
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('leave')
+        .setDescription('remove the @reserves role for yourself')
+    ),
 ].map((c) => c.toJSON())
 const restClient = new REST({ version: '10' }).setToken(BOT_TOKEN)
 
