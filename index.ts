@@ -15,7 +15,6 @@ import {
   MANAIA_CATEGORY_ID,
   POLLING_INTERVAL,
   RESERVE_ALERTS_NAME,
-  RESERVE_ROLE_ID,
 } from './constants'
 import {
   checkForUnresolvedMessages,
@@ -33,6 +32,12 @@ import {
   handleHelpDeskReactionRemove,
   handleReserveAlertsReactionRemove,
 } from './handlers/reactionRemove'
+import {
+  addReservesRole,
+  listReserves,
+  removeReservesRole,
+  toggleReserveRole,
+} from './commands/reserves'
 
 export type MessageStatus =
   | 'unresolved'
@@ -91,7 +96,9 @@ client.once('ready', async (client) => {
     .addFields(
       {
         name: 'Active Reserves:',
-        value: reserves.map((r) => userMention(r.user.id)).join(', '),
+        value: reserves.size
+          ? reserves.map((r) => userMention(r.user.id)).join(', ')
+          : 'None',
       },
       {
         name: 'Total:',
@@ -247,17 +254,21 @@ client.on('interactionCreate', async (interaction) => {
 
   if (interaction.commandName === 'reserves') {
     try {
-      if (member?.roles.cache.some((role) => role.id === RESERVE_ROLE_ID)) {
-        await member.roles.remove(RESERVE_ROLE_ID)
-        await interaction.reply('You have been dismissed from the reserve. 💌')
-        return
-      } else {
-        await member.roles.add(RESERVE_ROLE_ID)
-        await interaction.reply('Welcome to the reserve! 🥳')
-        return
+      switch (interaction.options.getSubcommand()) {
+        case 'list':
+          await listReserves(interaction)
+          break
+        case 'toggle':
+          await toggleReserveRole(interaction)
+          break
+        case 'join':
+          await addReservesRole(interaction)
+          break
+        case 'leave':
+          await removeReservesRole(interaction)
       }
     } catch (err) {
-      console.log(err)
+      console.error(err)
       await interaction.reply('Argh, Bananas and Ferarris! Something happened.')
     }
   }
