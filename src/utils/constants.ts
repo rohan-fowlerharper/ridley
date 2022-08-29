@@ -14,10 +14,3 @@ export const FACILITATOR_ROLES = [
   'wellington-facilitators',
   'auckland-facilitators',
 ]
-
-// time before unresolved messages are sent to reserves
-export const UNRESOLVED_TIME_THRESHOLD = 1000 * 60 * 7 // 7 minutes
-// number of unresolved messages before they are sent to reserves
-export const UNRESOLVED_MESSAGE_THRESHOLD = 3 // 3
-// check for unresolved messages every X ms
-export const POLLING_INTERVAL = 1000 * 30 // 30 seconds
