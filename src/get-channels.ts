@@ -1,9 +1,9 @@
-import { HELP_DESK_NAME, RESERVE_ALERTS_NAME } from './constants'
-import { client } from './client'
+import { HELP_DESK_NAME, RESERVE_ALERTS_NAME } from './utils/constants'
 
 import type * as TDiscord from 'discord.js'
 
 export function getChannelById<TChannel extends TDiscord.Channel>(
+  client: TDiscord.Client,
   id: TDiscord.Channel['id']
 ) {
   return client.channels.cache.get(id) as TChannel

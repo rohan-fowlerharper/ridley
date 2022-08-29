@@ -5,21 +5,15 @@ import {
   roleMention,
 } from 'discord.js'
 
-import {
-  CATEGORY_IDS,
-  FACILITATOR_ROLES,
-  RESERVE_ROLE_ID,
-  UNRESOLVED_MESSAGE_THRESHOLD,
-  UNRESOLVED_TIME_THRESHOLD,
-} from './constants'
-import { getChannelById, getReserveAlertsChannel } from './get-channels'
+import { CATEGORY_IDS, FACILITATOR_ROLES, RESERVE_ROLE_ID } from './constants'
+import { getChannelById, getReserveAlertsChannel } from '../get-channels'
 
 import type {
   HelpMessage,
-  HelpMessageMap,
+  UnresolvedMessagesForCategory,
   MessageStatus,
   UnresolvedMessages,
-} from './index'
+} from '../types'
 import type * as TDiscord from 'discord.js'
 
 export const isActiveCohort = (categoryChannel: TDiscord.CategoryChannel) =>
@@ -31,31 +25,35 @@ export const isFacilitator = (member: TDiscord.GuildMember) => {
   )
 }
 
-export const hasBeenWaitingWithoutReaction = (message: HelpMessage) => {
-  return (
-    Date.now() - message.createdTimestamp > UNRESOLVED_TIME_THRESHOLD &&
-    message.reactions.cache.size === 0
-  )
-}
+export const hasBeenWaitingWithoutReaction = (message: HelpMessage) =>
+  Date.now() - message.createdTimestamp >
+    +process.env.UNRESOLVED_TIME_THRESHOLD && message.reactions.cache.size === 0
 
-export const isNewMessageWithoutReaction = (messages: HelpMessageMap) => {
-  return getNumberOfUnresolvedMessages(messages) > UNRESOLVED_MESSAGE_THRESHOLD
-}
+export const isNewMessageWithoutReaction = (
+  messages: UnresolvedMessagesForCategory
+) =>
+  getNumberOfUnresolvedMessages(messages) >
+  +process.env.UNRESOLVED_MESSAGE_THRESHOLD
 
-export const getNumberOfUnresolvedMessages = (messages: HelpMessageMap) => {
-  return filterMessagesByStatus(messages, 'unresolved').size
-}
+export const getNumberOfUnresolvedMessages = (
+  messages: UnresolvedMessagesForCategory
+) => filterMessagesByStatus(messages, 'unresolved').size
 
 export const filterMessagesByStatus = (
-  messages: HelpMessageMap,
+  messages: UnresolvedMessagesForCategory,
   status: MessageStatus
-): HelpMessageMap => {
-  return new Map([...messages].filter(([, m]) => m.status === status))
-}
+): UnresolvedMessagesForCategory =>
+  new Map([...messages].filter(([, m]) => m.status === status))
 
-export async function checkForUnresolvedMessages(messages: UnresolvedMessages) {
+export async function checkForUnresolvedMessages(
+  client: TDiscord.Client,
+  messages: UnresolvedMessages
+) {
   for (const [categoryId, unresolvedCategoryMessages] of messages) {
-    const categoryChannel = getChannelById<TDiscord.CategoryChannel>(categoryId)
+    const categoryChannel = getChannelById<TDiscord.CategoryChannel>(
+      client,
+      categoryId
+    )
     for (const [id, message] of unresolvedCategoryMessages) {
       if (
         (hasBeenWaitingWithoutReaction(message) ||
@@ -162,7 +160,7 @@ export const validateChildChannel = (
 }
 
 export function resolveMessage(
-  messages: HelpMessageMap,
+  messages: UnresolvedMessagesForCategory,
   messageId: HelpMessage['id']
 ) {
   const message = messages.get(messageId)

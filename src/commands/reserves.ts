@@ -1,8 +1,8 @@
 import type * as TDiscord from 'discord.js'
 import { EmbedBuilder, userMention } from 'discord.js'
 
-import { RESERVE_ROLE_ID } from '../constants'
-import { getActiveReserves } from '../helpers'
+import { RESERVE_ROLE_ID } from '../utils/constants'
+import { getActiveReserves } from '../utils/helpers'
 
 export async function removeReservesRole(
   interaction: TDiscord.ChatInputCommandInteraction<TDiscord.CacheType>

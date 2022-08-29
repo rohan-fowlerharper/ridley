@@ -1,14 +1,21 @@
-import 'dotenv/config'
+import * as dotenv from 'dotenv'
 import { SlashCommandBuilder, Routes } from 'discord.js'
 import { REST } from '@discordjs/rest'
+import invariant from 'tiny-invariant'
 
+dotenv.config({
+  path:
+    process.env.NODE_ENV === 'production'
+      ? '.env.production'
+      : '.env.development',
+})
 const { BOT_TOKEN, APP_ID } = process.env
 
-if (!BOT_TOKEN || !APP_ID) {
-  throw new Error('BOT_TOKEN and APP_ID must be set')
-}
+invariant(BOT_TOKEN, 'BOT_TOKEN is required')
+invariant(APP_ID, 'APP_ID is required')
 
 // https://discordjs.guide/creating-your-bot/creating-commands.html#command-deployment-script
+// TODO: automatically generate this from the commands folder
 const commands = [
   new SlashCommandBuilder()
     .setName('reserves')
