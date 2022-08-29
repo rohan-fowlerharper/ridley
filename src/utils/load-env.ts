@@ -1,14 +1,7 @@
-import * as dotenv from 'dotenv'
+import 'dotenv/config'
 import invariant from 'tiny-invariant'
 
 export default function load() {
-  dotenv.config({
-    path:
-      process.env.NODE_ENV === 'production'
-        ? '.env.production'
-        : '.env.development',
-  })
-
   const requiredEnvs = [
     'BOT_TOKEN',
     'APP_ID',
