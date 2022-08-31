@@ -6,7 +6,7 @@ import {
 } from 'discord.js'
 
 import { CATEGORY_IDS, FACILITATOR_ROLES, RESERVE_ROLE_ID } from './constants'
-import { getChannelById, getReserveAlertsChannel } from '../get-channels'
+import { getChannelById, getReserveAlertsChannel } from './get-channels'
 
 import type {
   HelpMessage,
