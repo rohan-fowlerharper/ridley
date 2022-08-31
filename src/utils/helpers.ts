@@ -80,6 +80,17 @@ export async function checkForUnresolvedMessages(
   }
 }
 
+export function getReservesRoleForCohort(
+  categoryChannel: TDiscord.CategoryChannel
+) {
+  const cohort = categoryChannel.name.toLowerCase().split(' ')[0]
+  const roleName = `${cohort}-reserves`
+  const role = categoryChannel.guild.roles.cache.find(
+    (r) => r.name === roleName
+  )
+  return role
+}
+
 export async function sendMessageToReserves(
   categoryChannel: TDiscord.CategoryChannel,
   message: HelpMessage
@@ -93,7 +104,10 @@ export async function sendMessageToReserves(
     ) as TDiscord.VoiceChannel | undefined
   }
 
-  let response = `${roleMention(RESERVE_ROLE_ID)}`
+  const reservesRole = getReservesRoleForCohort(categoryChannel)
+  if (!reservesRole) return
+
+  let response = `${roleMention(reservesRole.id)}`
 
   if (voiceChannel) {
     response += ` ${channelMention(voiceChannel.id)}`
