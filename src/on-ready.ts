@@ -1,8 +1,12 @@
 import type * as TDiscord from 'discord.js'
-import { EmbedBuilder, userMention } from 'discord.js'
+import { EmbedBuilder } from 'discord.js'
 import { DAA_SERVER_ID, MANAIA_CATEGORY_ID } from './utils/constants'
 import { getChannelById, getReserveAlertsChannel } from './utils/get-channels'
-import { checkForUnresolvedMessages, getActiveReserves } from './utils/helpers'
+import {
+  checkForUnresolvedMessages,
+  getActiveReserves,
+  makeListEmbedFields,
+} from './utils/helpers'
 import type { UnresolvedMessages } from './types'
 
 export async function setup(
@@ -38,20 +42,11 @@ export async function setup(
       client.guilds.cache.get(DAA_SERVER_ID)!
     )
 
+    const fields = makeListEmbedFields(reserves)
+
     const embed = new EmbedBuilder()
-      .setTitle('Ready to deploy the Reserves 🪖')
-      .addFields(
-        {
-          name: 'Active Reserves:',
-          value: reserves.size
-            ? reserves.map((r) => userMention(r.user.id)).join(', ')
-            : 'None',
-        },
-        {
-          name: 'Total:',
-          value: reserves.size.toString(),
-        }
-      )
+      .setTitle('Here are the currently active reserves 🪖')
+      .addFields(fields)
       .setColor('#e91e63')
 
     void reserveAlertsChannel.send({
