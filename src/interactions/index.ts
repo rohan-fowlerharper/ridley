@@ -43,13 +43,13 @@ export async function setup(client: TDiscord.Client) {
             await cmd.listReserves(interaction)
             break
           case 'toggle':
-            await cmd.toggleReserveRole(interaction)
+            await cmd.toggleReserveRole(interaction, categoryChannel)
             break
           case 'join':
-            await cmd.addReservesRole(interaction)
+            await cmd.addReservesRole(interaction, categoryChannel)
             break
           case 'leave':
-            await cmd.removeReservesRole(interaction)
+            await cmd.removeReservesRole(interaction, categoryChannel)
         }
       } catch (err) {
         console.error(err)
