@@ -1,7 +1,7 @@
 import type * as TDiscord from 'discord.js'
 import { channelMention, ChannelType } from 'discord.js'
 import { RESERVE_ALERTS_NAME } from '../utils/constants'
-import { getReserveAlertsChannel } from '../get-channels'
+import { getReserveAlertsChannel } from '../utils/get-channels'
 import { isFacilitator } from '../utils/helpers'
 import * as cmd from '../commands/reserves'
 

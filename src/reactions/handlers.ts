@@ -1,4 +1,7 @@
-import { getHelpDeskChannel, getReserveAlertsChannel } from '../get-channels'
+import {
+  getHelpDeskChannel,
+  getReserveAlertsChannel,
+} from '../utils/get-channels'
 
 import type * as TDiscord from 'discord.js'
 import type { UnresolvedMessagesForCategory } from '../types'

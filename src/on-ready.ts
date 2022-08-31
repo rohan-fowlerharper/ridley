@@ -1,7 +1,7 @@
 import type * as TDiscord from 'discord.js'
 import { EmbedBuilder, userMention } from 'discord.js'
 import { DAA_SERVER_ID, MANAIA_CATEGORY_ID } from './utils/constants'
-import { getChannelById, getReserveAlertsChannel } from './get-channels'
+import { getChannelById, getReserveAlertsChannel } from './utils/get-channels'
 import { checkForUnresolvedMessages, getActiveReserves } from './utils/helpers'
 import type { UnresolvedMessages } from './types'
 
