@@ -69,15 +69,14 @@ export async function checkForUnresolvedMessages(
         unresolvedCategoryMessages.delete(id)
       }
     }
-    if (categoryChannel.name === 'Manaia 2022') {
-      console.log({
-        unresolved: getNumberOfUnresolvedMessages(unresolvedCategoryMessages),
-        sentLocal: filterMessagesByStatus(
-          unresolvedCategoryMessages,
-          'sentToLocalReserve'
-        ).size,
-      })
-    }
+    console.log({
+      cohort: categoryChannel.name,
+      unresolved: getNumberOfUnresolvedMessages(unresolvedCategoryMessages),
+      sentLocal: filterMessagesByStatus(
+        unresolvedCategoryMessages,
+        'sentToLocalReserve'
+      ).size,
+    })
   }
 }
 
