@@ -5,7 +5,7 @@ import {
   roleMention,
 } from 'discord.js'
 
-import { CATEGORY_IDS, FACILITATOR_ROLES, RESERVE_ROLE_ID } from './constants'
+import { CATEGORY_IDS, FACILITATOR_ROLES } from './constants'
 import { getChannelById, getReserveAlertsChannel } from './get-channels'
 
 import type {
@@ -184,10 +184,19 @@ export function resolveMessage(
 
 export async function getActiveReserves(guild: TDiscord.Guild) {
   const members = await guild.members.fetch()
+  const roles = guild.roles.cache.filter((r) => r.name.includes('reserves'))
 
-  const membersWithRole = members.filter((m) => {
-    return m.roles.cache.has(RESERVE_ROLE_ID)
-  })
+  return roles.map((r) => ({
+    role: r,
+    members: members.filter((m) => m.roles.cache.has(r.id)),
+  }))
+}
 
-  return membersWithRole
+export function makeListEmbedFields(
+  reserves: Awaited<ReturnType<typeof getActiveReserves>>
+) {
+  return reserves.map(({ role, members }) => ({
+    name: role.name,
+    value: members.map((m) => m.user).join(' '),
+  }))
 }

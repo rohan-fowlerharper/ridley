@@ -1,8 +1,12 @@
 import type * as TDiscord from 'discord.js'
-import { EmbedBuilder, userMention } from 'discord.js'
+import { EmbedBuilder } from 'discord.js'
 
 import { RESERVE_ROLE_ID } from '../utils/constants'
-import { getActiveReserves, getReservesRoleForCohort } from '../utils/helpers'
+import {
+  getActiveReserves,
+  getReservesRoleForCohort,
+  makeListEmbedFields,
+} from '../utils/helpers'
 
 export async function removeReservesRole(
   interaction: TDiscord.ChatInputCommandInteraction<TDiscord.CacheType>,
@@ -112,20 +116,13 @@ export async function listReserves(
   interaction: TDiscord.ChatInputCommandInteraction<TDiscord.CacheType>
 ) {
   const reserves = await getActiveReserves(interaction.guild as TDiscord.Guild)
+
+  const fields = makeListEmbedFields(reserves)
+
   const embed = new EmbedBuilder()
     .setTitle('Here are the currently active reserves 🪖')
-    .addFields(
-      {
-        name: 'Active Reserves:',
-        value: reserves.size
-          ? reserves.map((r) => userMention(r.user.id)).join(', ')
-          : 'None',
-      },
-      {
-        name: 'Total:',
-        value: reserves.size.toString(),
-      }
-    )
+    .addFields(fields)
     .setColor('#e91e63')
+
   await interaction.reply({ embeds: [embed] })
 }
