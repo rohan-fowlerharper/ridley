@@ -3,6 +3,7 @@ import {
   ChannelType,
   EmbedBuilder,
   roleMention,
+  userMention,
 } from 'discord.js'
 
 import { CATEGORY_IDS, FACILITATOR_ROLES } from './constants'
@@ -196,7 +197,11 @@ export function makeListEmbedFields(
   reserves: Awaited<ReturnType<typeof getActiveReserves>>
 ) {
   return reserves.map(({ role, members }) => ({
-    name: role.name,
-    value: members.map((m) => m.user).join(' '),
+    name: role.name
+      .split('-')
+      .filter((word) => word !== 'reserves')
+      .map((w) => w[0].toUpperCase() + w.slice(1))
+      .join(' '),
+    value: members.map((member) => userMention(member.id)).join(', ') || 'None',
   }))
 }
