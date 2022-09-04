@@ -27,13 +27,19 @@ export async function setup(
       MANAIA_CATEGORY_ID
     )
 
-    if (!manaiaCategoryChannel) return
+    if (!manaiaCategoryChannel) {
+      // TODO: fix me
+      console.log(
+        'manaia category channel not found, must be in the test server'
+      )
+      checkEvery(config.THRESHOLDS.POLLING_INTERVAL)
+      return
+    }
 
     const reserveAlertsChannel = getReserveAlertsChannel(manaiaCategoryChannel)
 
     if (process.env.NODE_ENV !== 'production') {
       void reserveAlertsChannel.send('Bot started in Development mode')
-
       checkEvery(config.THRESHOLDS.POLLING_INTERVAL)
       return
     }

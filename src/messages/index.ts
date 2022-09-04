@@ -12,7 +12,6 @@ export async function setup(
       message.channel
     )
     if (!isValid) return
-
     if (!isActiveCohort(categoryChannel)) return
     if (channel.name !== HELP_DESK_NAME) return
 
