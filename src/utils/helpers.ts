@@ -6,7 +6,7 @@ import {
   userMention,
 } from 'discord.js'
 
-import { CATEGORY_IDS, FACILITATOR_ROLES } from './constants'
+import { CATEGORY_IDS, FACILITATOR_ROLES, config } from './constants'
 import { getChannelById, getReserveAlertsChannel } from './get-channels'
 
 import type {
@@ -27,14 +27,14 @@ export const isFacilitator = (member: TDiscord.GuildMember) => {
 }
 
 export const hasBeenWaitingWithoutReaction = (message: HelpMessage) =>
-  Date.now() - message.createdTimestamp >
-    +process.env.UNRESOLVED_TIME_THRESHOLD && message.reactions.cache.size === 0
+  Date.now() - message.createdTimestamp > config.THRESHOLDS.UNRESOLVED_TIME &&
+  message.reactions.cache.size === 0
 
 export const isNewMessageWithoutReaction = (
   messages: UnresolvedMessagesForCategory
 ) =>
   getNumberOfUnresolvedMessages(messages) >
-  +process.env.UNRESOLVED_MESSAGE_THRESHOLD
+  config.THRESHOLDS.UNRESOLVED_MESSAGES
 
 export const getNumberOfUnresolvedMessages = (
   messages: UnresolvedMessagesForCategory

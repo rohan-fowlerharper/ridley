@@ -3,12 +3,13 @@
 declare global {
   declare namespace NodeJS {
     interface ProcessEnv {
-      NODE_ENV: 'development' | 'production' | 'test'
+      NODE_ENV: 'development' | 'production' | 'test' | 'staging'
       BOT_TOKEN: string
       APP_ID: string
-      UNRESOLVED_TIME_THRESHOLD: string
-      UNRESOLVED_MESSAGE_THRESHOLD: string
-      POLLING_INTERVAL: string
+      GUILD_ID: string
+      TEST_BOT_TOKEN: string
+      TEST_APP_ID: string
+      TEST_GUILD_ID: string
     }
   }
 }

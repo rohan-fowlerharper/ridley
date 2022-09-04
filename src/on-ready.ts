@@ -1,6 +1,6 @@
 import type * as TDiscord from 'discord.js'
 import { EmbedBuilder } from 'discord.js'
-import { DAA_SERVER_ID, MANAIA_CATEGORY_ID } from './utils/constants'
+import { config, DAA_SERVER_ID, MANAIA_CATEGORY_ID } from './utils/constants'
 import { getChannelById, getReserveAlertsChannel } from './utils/get-channels'
 import {
   checkForUnresolvedMessages,
@@ -34,7 +34,7 @@ export async function setup(
     if (process.env.NODE_ENV !== 'production') {
       void reserveAlertsChannel.send('Bot started in Development mode')
 
-      checkEvery(+process.env.POLLING_INTERVAL)
+      checkEvery(config.THRESHOLDS.POLLING_INTERVAL)
       return
     }
 
@@ -53,7 +53,7 @@ export async function setup(
       content: `Reserver Alerter started`,
       embeds: [embed],
     })
-    checkEvery(+process.env.POLLING_INTERVAL)
+    checkEvery(config.THRESHOLDS.POLLING_INTERVAL)
   })
 
   const checkEvery = (ms: number) => {

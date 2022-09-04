@@ -1,5 +1,5 @@
 import { Client, GatewayIntentBits, Partials } from 'discord.js'
-import { CATEGORY_IDS } from './utils/constants'
+import { CATEGORY_IDS, config } from './utils/constants'
 
 import * as reactions from './reactions'
 import * as messages from './messages'
@@ -37,5 +37,5 @@ export async function start() {
 
   ready.setup(client, unresolvedMessages)
 
-  client.login(process.env.BOT_TOKEN)
+  client.login(config.BOT_TOKEN)
 }

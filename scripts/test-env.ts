@@ -1,12 +1,6 @@
-import * as dotenv from 'dotenv'
+import 'dotenv/config'
 import invariant from 'tiny-invariant'
 
-dotenv.config({
-  path:
-    process.env.NODE_ENV === 'production'
-      ? '.env.production'
-      : '.env.development',
-})
 const {
   BOT_TOKEN,
   APP_ID,
@@ -16,6 +10,10 @@ const {
 
 invariant(BOT_TOKEN, 'BOT_TOKEN is required')
 invariant(APP_ID, 'APP_ID is required')
+
+import config from '../bot.config'
+const env = process.env.NODE_ENV || 'development'
+console.log(config[env])
 
 console.log(BOT_TOKEN)
 console.log(UNRESOLVED_MESSAGE_THRESHOLD)

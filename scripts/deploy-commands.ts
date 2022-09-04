@@ -5,18 +5,21 @@ import { REST } from '@discordjs/rest'
 import invariant from 'tiny-invariant'
 
 dotenv.config()
-const { BOT_TOKEN, APP_ID } = process.env
+const env = process.env.NODE_ENV || 'development'
+const botToken =
+  env === 'development' ? process.env.TEST_BOT_TOKEN : process.env.BOT_TOKEN
+const appId =
+  env === 'development' ? process.env.TEST_APP_ID : process.env.APP_ID
 
-invariant(BOT_TOKEN, 'BOT_TOKEN is required')
-invariant(APP_ID, 'APP_ID is required')
+invariant(botToken, `bot token is required in .env for ${env}`)
+invariant(appId, `app id is required in .env for ${env}`)
 
 const cohortsOption = (option: TDiscord.SlashCommandStringOption) =>
   option
     .setName('cohort')
     .setDescription('control what cohort you are in the reserves for')
     .addChoices(
-      { name: 'manaia', value: 'manaia' },
-      { name: 'pikopiko', value: 'pikopiko' },
+      { name: 'aihe', value: 'aihe' },
       { name: 'backup', value: 'backup' }
     )
 
@@ -48,10 +51,10 @@ const commands = [
         .addStringOption(cohortsOption)
     ),
 ].map((c) => c.toJSON())
-const restClient = new REST({ version: '10' }).setToken(BOT_TOKEN)
+const restClient = new REST({ version: '10' }).setToken(botToken)
 
 restClient
-  .put(Routes.applicationCommands(APP_ID), {
+  .put(Routes.applicationCommands(appId), {
     body: commands,
   })
   .then(() => {

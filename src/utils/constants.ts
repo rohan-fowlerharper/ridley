@@ -1,14 +1,16 @@
-export const DAA_SERVER_ID = '690141234596937780'
-export const RESERVE_ROLE_ID = '1009586205832269938'
-export const MANAIA_RESERVES_ID = ''
-export const PIKOPIKO_RESERVES_ID = ''
-export const HELP_DESK_NAME =
-  process.env.NODE_ENV === 'production' ? 'help-desk' : 'mock-help-desk' // or mock-help-desk for dev
-export const RESERVE_ALERTS_NAME = 'reserve-alerts'
+import configs from '../../bot.config'
 
-export const MANAIA_CATEGORY_ID = '999052406870507592'
-export const PIKOPIKO_CATEGORY_ID = '996201776665591919'
-export const CATEGORY_IDS = [MANAIA_CATEGORY_ID, PIKOPIKO_CATEGORY_ID]
+// TODO: tidy this up to only use the config file
+// instead of re-exporting everything here
+export const env = process.env.NODE_ENV || 'development'
+export const config = configs[env]
+
+export const DAA_SERVER_ID = config.GUILD_ID
+export const RESERVE_ROLE_ID = config.ROLE_ID_BACKUP_RESERVES
+export const HELP_DESK_NAME = config.HELP_DESK_NAME
+export const RESERVE_ALERTS_NAME = config.RESERVE_ALERTS_NAME
+
+export const CATEGORY_IDS = config.CATEGORY_IDS
 
 export const FACILITATOR_ROLES = [
   'dev academy staff',
@@ -17,3 +19,7 @@ export const FACILITATOR_ROLES = [
   'wellington-facilitators',
   'auckland-facilitators',
 ]
+
+// TODO: this is only used to transmit the 'bot started' message
+// remove and transmit start message to all reserve-alerts channels
+export const MANAIA_CATEGORY_ID = '999052406870507592'

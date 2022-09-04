@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "start": "ts-node --swc=true src/index.ts"
+    "start": "ts-node src/index.ts",
+    "preview": "NODE_ENV=staging ts-node src/index.ts"
   },
   "keywords": [],
   "author": "",
