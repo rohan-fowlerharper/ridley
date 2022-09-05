@@ -26,6 +26,10 @@ export const isFacilitator = (member: TDiscord.GuildMember) => {
   )
 }
 
+export const isStudentMessage = (message: TDiscord.Message) => {
+  return message.member && !isFacilitator(message.member)
+}
+
 export const hasBeenWaitingWithoutReaction = (message: HelpMessage) =>
   Date.now() - message.createdTimestamp > config.THRESHOLDS.UNRESOLVED_TIME &&
   message.reactions.cache.size === 0
