@@ -1,6 +1,10 @@
 import type * as TDiscord from 'discord.js'
 import { HELP_DESK_NAME } from '../utils/constants'
-import { isActiveCohort, validateChildChannel } from '../utils/helpers'
+import {
+  isActiveCohort,
+  isStudentMessage,
+  validateChildChannel,
+} from '../utils/helpers'
 import type { UnresolvedMessages } from '../types'
 
 export async function setup(
@@ -14,6 +18,7 @@ export async function setup(
     if (!isValid) return
     if (!isActiveCohort(categoryChannel)) return
     if (channel.name !== HELP_DESK_NAME) return
+    if (!isStudentMessage(message)) return
 
     const unresolvedMessagesForCategory = unresolvedMessages.get(
       categoryChannel.id
