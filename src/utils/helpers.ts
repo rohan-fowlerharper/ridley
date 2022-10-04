@@ -84,7 +84,7 @@ export async function checkForUnresolvedMessages(
 export function getReservesRoleForCohort(
   categoryChannel: TDiscord.CategoryChannel
 ) {
-  const cohort = categoryChannel.name.toLowerCase().split(' ')[0]
+  const cohort = categoryChannel.name.toLowerCase().split(' ').at(-2)
   const roleName = `${cohort}-reserves`
   const role = categoryChannel.guild.roles.cache.find(
     (r) => r.name === roleName
@@ -106,6 +106,7 @@ export async function sendMessageToReserves(
   }
 
   const reservesRole = getReservesRoleForCohort(categoryChannel)
+
   if (!reservesRole) return
 
   let response = `${roleMention(reservesRole.id)}`
