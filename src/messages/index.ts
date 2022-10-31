@@ -29,7 +29,16 @@ export async function setup(
     const mentionedChannel = message.mentions.channels.first()
     const mentionedRole = message.mentions.roles.first()
 
-    if (mentionedChannel || mentionedRole) {
+    const isHelpMessage = () => {
+      if (mentionedChannel) return true
+      if (mentionedRole) return true
+
+      if (message.content.toLowerCase().includes('help in')) return true
+
+      return false
+    }
+
+    if (isHelpMessage()) {
       unresolvedMessagesForCategory.set(message.id, {
         ...message,
         status: 'unresolved',
