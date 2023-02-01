@@ -4,9 +4,44 @@ import { EmbedBuilder } from 'discord.js'
 import { RESERVE_ROLE_ID } from '../utils/constants'
 import {
   getActiveReserves,
-  getReservesRoleForCohort,
   makeListEmbedFields,
+  toTitleCase,
 } from '../utils/helpers'
+
+const actions = {
+  add: async ({
+    member,
+    reservesRoleId,
+    facilitatorRoleId,
+    cohortName,
+  }: {
+    member: TDiscord.GuildMember
+    reservesRoleId: string
+    facilitatorRoleId: string
+    cohortName: string
+  }) => {
+    await member.roles.remove(facilitatorRoleId)
+    await member.roles.add(reservesRoleId)
+    return `Welcome to the reserves for ${toTitleCase(cohortName)}! 🥳`
+  },
+  remove: async ({
+    member,
+    reservesRoleId,
+    cohortName,
+    facilitatorRoleId,
+  }: {
+    member: TDiscord.GuildMember
+    reservesRoleId: string
+    facilitatorRoleId: string
+    cohortName: string
+  }) => {
+    await member.roles.add(facilitatorRoleId)
+    await member.roles.remove(reservesRoleId)
+    return `You have been dismissed from the reserve for ${toTitleCase(
+      cohortName
+    )}. 💌`
+  },
+}
 
 export async function removeReservesRole(
   interaction: TDiscord.ChatInputCommandInteraction<TDiscord.CacheType>,
@@ -14,19 +49,18 @@ export async function removeReservesRole(
 ) {
   const options = await extractOptions(interaction, categoryChannel)
   if (!options) return
-  const { reservesRoleId, member, cohortName } = options
+  const { reservesRoleId, member, cohortName, facilitatorRoleId } = options
 
+  let response: string
   if (!hasReservesRole(member, reservesRoleId)) {
-    await interaction.reply(
-      `You don't have the reserves role for ${cohortName} anyway 🤷`
-    )
-    return
+    response = `You don't have the reserves role for ${toTitleCase(
+      cohortName
+    )} anyway 🤷`
   } else {
-    await member.roles.remove(reservesRoleId)
-    await interaction.reply(
-      `You have been dismissed from the reserve for ${cohortName}. 💌`
-    )
+    response = await actions.remove(options)
   }
+
+  await interaction.reply(response)
 }
 
 export async function addReservesRole(
@@ -37,14 +71,16 @@ export async function addReservesRole(
   if (!options) return
   const { reservesRoleId, member, cohortName } = options
 
+  let response: string
   if (hasReservesRole(member, reservesRoleId)) {
-    await interaction.reply(
-      `You are already part of the ${cohortName} reserves. 🪖`
-    )
+    response = `You are already part of the ${toTitleCase(
+      cohortName
+    )} reserves. 🪖`
   } else {
-    await member.roles.add(reservesRoleId)
-    await interaction.reply(`Welcome to the reserve for ${cohortName}! 🥳`)
+    response = await actions.add(options)
   }
+
+  await interaction.reply(response)
 }
 
 export async function toggleReserveRole(
@@ -53,27 +89,30 @@ export async function toggleReserveRole(
 ) {
   const options = await extractOptions(interaction, categoryChannel)
   if (!options) return
-  const { reservesRoleId, member, cohortName } = options
+  const { reservesRoleId, member } = options
 
+  let response: string
   if (hasReservesRole(member, reservesRoleId)) {
-    await member.roles.remove(reservesRoleId)
-    await interaction.reply(
-      `You have been dismissed from the reserve for ${cohortName}. 💌`
-    )
-    return
+    response = await actions.remove(options)
   } else {
-    await member.roles.add(reservesRoleId)
-    await interaction.reply(`Welcome to the reserve for ${cohortName}! 🥳`)
-    return
+    response = await actions.add(options)
   }
+
+  await interaction.reply(response)
 }
 
 async function extractOptions(
   interaction: TDiscord.ChatInputCommandInteraction<TDiscord.CacheType>,
   categoryChannel: TDiscord.CategoryChannel
 ) {
-  const cohortOption = interaction.options.getString('cohort')
-  const reservesRoleId = determineReservesRoleId(cohortOption, categoryChannel)
+  const cohortName =
+    interaction.options.getString('cohort') ??
+    categoryChannel.name.toLowerCase().split(' ').at(-2)!
+  const reservesRoleId = determineReservesRoleId(cohortName, categoryChannel)
+  const facilitatorRoleId = determineFacilitatorRoleId(
+    cohortName,
+    categoryChannel
+  )
 
   if (!reservesRoleId) {
     await interaction.reply(
@@ -83,26 +122,27 @@ async function extractOptions(
   }
   const member = interaction.member as TDiscord.GuildMember
 
-  const cohortName =
-    cohortOption ?? categoryChannel.name.toLowerCase().split(' ')[0]
-
-  return { reservesRoleId, member, cohortName }
+  return { reservesRoleId, facilitatorRoleId, member, cohortName }
 }
 
 function determineReservesRoleId(
-  cohortOption: string | null,
+  cohortOption: string,
   categoryChannel: TDiscord.CategoryChannel
 ) {
-  if (!cohortOption)
-    return getReservesRoleForCohort(categoryChannel)?.id ?? null
-
   if (cohortOption === 'backup') return RESERVE_ROLE_ID
 
-  return (
-    categoryChannel.guild.roles.cache.find(
-      (r) => r.name === `${cohortOption}-reserves`
-    )?.id ?? null
-  )
+  return categoryChannel.guild.roles.cache.find(
+    (r) => r.name === `${cohortOption}-reserves`
+  )!.id
+}
+
+function determineFacilitatorRoleId(
+  cohortOption: string,
+  categoryChannel: TDiscord.CategoryChannel
+) {
+  return categoryChannel.guild.roles.cache.find(
+    (r) => r.name === `${cohortOption}-facilitators`
+  )!.id
 }
 
 function hasReservesRole(

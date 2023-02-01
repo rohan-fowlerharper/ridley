@@ -210,3 +210,10 @@ export function makeListEmbedFields(
     value: members.map((member) => userMention(member.id)).join(', ') || 'None',
   }))
 }
+
+export function toTitleCase(str: string) {
+  return str
+    .split(' ')
+    .map((word) => word[0].toUpperCase() + word.slice(1))
+    .join(' ')
+}
