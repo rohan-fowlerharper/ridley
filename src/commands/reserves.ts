@@ -114,9 +114,9 @@ async function extractOptions(
     categoryChannel
   )
 
-  if (!reservesRoleId) {
+  if (!reservesRoleId || !facilitatorRoleId) {
     await interaction.reply(
-      'Something went wrong parsing your command... This is awkward'
+      'Apologies Pvt., I could not find the reserves role for that cohort.'
     )
     return
   }
@@ -133,7 +133,7 @@ function determineReservesRoleId(
 
   return categoryChannel.guild.roles.cache.find(
     (r) => r.name === `${cohortOption}-reserves`
-  )!.id
+  )?.id
 }
 
 function determineFacilitatorRoleId(
