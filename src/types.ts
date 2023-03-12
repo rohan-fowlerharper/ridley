@@ -15,6 +15,7 @@ export type HelpMessage = Pick<
   | 'author'
   | 'reactions'
   | 'mentions'
+  | 'guildId'
 > & {
   status: MessageStatus
   dispatchedMessageId?: string

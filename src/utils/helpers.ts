@@ -121,6 +121,8 @@ export async function sendMessageToReserves(
 
   response += '\n'
 
+  const messageUrl = `https://discord.com/channels/${message.guildId}/${message.channelId}/${message.id}`
+
   const embed = new EmbedBuilder()
     .setDescription(`>>> ${message.content}`)
     .setAuthor({
@@ -128,6 +130,7 @@ export async function sendMessageToReserves(
       iconURL: message.author.displayAvatarURL(),
     })
     .addFields(
+      { name: 'Link', value: `[Jump to message](${messageUrl})` },
       { name: 'Message ID', value: message.id, inline: true },
       { name: '\u200B', value: '\u200B', inline: true },
       {
