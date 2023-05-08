@@ -19,7 +19,7 @@ const cohortsOption = (option: TDiscord.SlashCommandStringOption) =>
     .setName('cohort')
     .setDescription('control what cohort you are in the reserves for')
     .addChoices(
-      { name: 'tohorā', value: 'tohorā' },
+      { name: 'whai', value: 'whai' },
       { name: 'backup', value: 'backup' }
     )
 
