@@ -1,7 +1,7 @@
 import type * as TDiscord from 'discord.js'
 
 // TODO: derive these from generated file/config
-const TOHORA_CATEGORY_ID = '1069825335182508052'
+const WHAI_CATEGORY_ID = '1100380416566894592'
 const AIHE_TEST_CATEGORY_ID = '1015434245235281940'
 
 export default {
@@ -10,7 +10,7 @@ export default {
     BOT_TOKEN: process.env.BOT_TOKEN,
     HELP_DESK_NAME: 'help-desk',
     RESERVE_ALERTS_NAME: 'reserve-alerts',
-    CATEGORY_IDS: [TOHORA_CATEGORY_ID],
+    CATEGORY_IDS: [WHAI_CATEGORY_ID],
     ROLE_ID_BACKUP_RESERVES: '1009586205832269938',
     THRESHOLDS: {
       UNRESOLVED_TIME: 1000 * 60 * 7, // 7 minutes
@@ -23,7 +23,7 @@ export default {
     BOT_TOKEN: process.env.BOT_TOKEN,
     HELP_DESK_NAME: 'mock-help-desk',
     RESERVE_ALERTS_NAME: 'reserve-alerts',
-    CATEGORY_IDS: [TOHORA_CATEGORY_ID],
+    CATEGORY_IDS: [WHAI_CATEGORY_ID],
     ROLE_ID_BACKUP_RESERVES: '1009586205832269938',
     THRESHOLDS: {
       UNRESOLVED_TIME: 1000 * 5, // 5 seconds
