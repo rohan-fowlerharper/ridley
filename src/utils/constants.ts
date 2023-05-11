@@ -19,7 +19,3 @@ export const FACILITATOR_ROLES = [
   'wellington-facilitators',
   'auckland-facilitators',
 ]
-
-// TODO: this is only used to transmit the 'bot started' message
-// remove and transmit start message to all reserve-alerts channels
-export const MANAIA_CATEGORY_ID = '999052406870507592'

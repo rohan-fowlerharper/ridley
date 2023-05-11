@@ -1,6 +1,6 @@
 import type * as TDiscord from 'discord.js'
 import { EmbedBuilder } from 'discord.js'
-import { config, DAA_SERVER_ID, MANAIA_CATEGORY_ID } from './utils/constants'
+import { config, DAA_SERVER_ID, env } from './utils/constants'
 import { getChannelById, getReserveAlertsChannel } from './utils/get-channels'
 import {
   checkForUnresolvedMessages,
@@ -19,46 +19,45 @@ export async function setup(
     // lol
     client.user?.setPresence({
       activities: [{ name: 'deploying reserves...' }],
-      status: 'idle',
+      status: 'online',
     })
 
-    const manaiaCategoryChannel = getChannelById<TDiscord.CategoryChannel>(
-      client,
-      MANAIA_CATEGORY_ID
-    )
+    const channels = config.CATEGORY_IDS.map((categoryId) => {
+      const category = getChannelById(
+        client,
+        categoryId
+      ) as TDiscord.CategoryChannel
 
-    if (!manaiaCategoryChannel) {
-      // TODO: fix me
-      console.log(
-        'manaia category channel not found, must be in the test server'
+      if (!category) return undefined
+      const reserveAlertsChannel = getReserveAlertsChannel(category)
+      return reserveAlertsChannel
+    }).filter(Boolean) as TDiscord.TextChannel[]
+
+    if (env === 'development') {
+      channels.forEach((c) => c.send('Bot started in Development mode'))
+    } else if (env === 'staging') {
+      channels.forEach((c) => c.send('Bot started in Staging mode'))
+    } else {
+      const reserves = await getActiveReserves(
+        client.guilds.cache.get(DAA_SERVER_ID)!
       )
-      checkEvery(config.THRESHOLDS.POLLING_INTERVAL)
-      return
+
+      const fields = makeListEmbedFields(reserves)
+
+      const embed = new EmbedBuilder()
+
+      embed.setTitle('Here are the currently active reserves 🪖')
+      embed.addFields(fields)
+      embed.setColor('#e91e63')
+
+      channels.forEach((channel) => {
+        void channel.send({
+          content: `Lt. Ridley reporting for duty ⛑️`,
+          embeds: [embed],
+        })
+      })
     }
 
-    const reserveAlertsChannel = getReserveAlertsChannel(manaiaCategoryChannel)
-
-    if (process.env.NODE_ENV !== 'production') {
-      void reserveAlertsChannel.send('Bot started in Development mode')
-      checkEvery(config.THRESHOLDS.POLLING_INTERVAL)
-      return
-    }
-
-    const reserves = await getActiveReserves(
-      client.guilds.cache.get(DAA_SERVER_ID)!
-    )
-
-    const fields = makeListEmbedFields(reserves)
-
-    const embed = new EmbedBuilder()
-      .setTitle('Here are the currently active reserves 🪖')
-      .addFields(fields)
-      .setColor('#e91e63')
-
-    void reserveAlertsChannel.send({
-      content: `Reserver Alerter started`,
-      embeds: [embed],
-    })
     checkEvery(config.THRESHOLDS.POLLING_INTERVAL)
   })
 
