@@ -45,8 +45,8 @@ export async function handleReserveAlertsReactionsAdd({
 
   if (!reaction.message.embeds[0]) return
 
-  // dependent on first field being messageId
-  const messageId = reaction.message.embeds[0].fields[0]?.value
+  // BE AWARE: dependent on second field being messageId in the embed
+  const messageId = reaction.message.embeds[0].fields[1]?.value
   if (!messageId) return
 
   const helpDeskChannel = getHelpDeskChannel(categoryChannel)
@@ -64,7 +64,9 @@ export async function handleReserveAlertsReactionRemove({
   client,
 }: HandlerProps) {
   if (!reaction.message.embeds[0]) return
-  const messageId = reaction.message.embeds[0].fields[0]?.value
+
+  // BE AWARE: dependent on second field being messageId in the embed
+  const messageId = reaction.message.embeds[0].fields[1]?.value
   if (!messageId) return
 
   const helpDeskChannel = getHelpDeskChannel(categoryChannel)
